@@ -1,0 +1,2 @@
+DEBUG = True
+FLASK_DEBUG = True
