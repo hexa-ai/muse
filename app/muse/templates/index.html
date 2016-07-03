@@ -1,5 +1,14 @@
 <html>
     <head>
+        <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+        <script type="text/javascript" src="./static/js/test.js"></script>
+        <script type="text/javascript" charset="utf-8">
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+            socket.on('connect', function() {
+                console.log('connected');
+                //socket.emit('my event', {data: 'I\'m connected!'});
+            });
+        </script>
     </head>
     <body>
         <h1>Muse</h1><h2>by HEXA</h2><p>Please contact your local bot</p>
