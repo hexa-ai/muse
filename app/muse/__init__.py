@@ -7,9 +7,9 @@ app.config.from_object('config')
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, async_mode="eventlet")
 
-@socketio.on('message')
+@socketio.on('update')
 def handle_message(message):
-        print('received message: ' + message)
+    print('received update')
 
 @app.route('/')
 def index():
