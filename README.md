@@ -4,14 +4,13 @@ An A.I. aided music sequencer
 -----
 
 ## Installation
+This creates a new conda environment and installs all Python related dependencies
 ```
-$ conda install flask
-$ pip install Flask-SocketIO
-$ pip install eventlet 
+$ conda env create -f environment.yml
+$ source activate muse
 ```
 
 ## Running
-After cloning the repository and install dependencies, execute the following:
 ```
 $ cd app/
 $ python run.py
