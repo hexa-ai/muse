@@ -13,32 +13,31 @@ function Drone() {
     var freqInc = freq / samplesPerSecond;
     
     return {
-        process: function(output) {
-            for(var i = 0; i < output.numberOfChannels; i++) {
+        process: function(event) {
+            for(var i = 0; i < event.outputBuffer.numberOfChannels; i++) {
                 var input = event.inputBuffer.getChannelData(i);
                 var output = event.outputBuffer.getChannelData(i);
                 for(var j = 0; j < output.length; j++) {
                     phase += freqInc;
                     output[j] = Math.sin(phase * Math.PI * 2.0) * 0.1;
-                    //output[j] += Math.sin(phase * .75 * Math.PI * 2.0) * 0.1;
-                    //output[j] += Math.sin(phase * .65 * Math.PI * 2.0) * 0.1;
+                    output[j] += Math.sin(phase * .75 * Math.PI * 2.0) * 0.1;
+                    output[j] += Math.sin(phase * .65 * Math.PI * 2.0) * 0.1;
                 }
             } 
-            return output;
         }
     }
 }
 
 engine.onaudioprocess = function(event) {
-    var input = event.inputBuffer;
-    var output = event.outputBuffer;
     for(var i = 0; i < sources.length; i++) {
-        output = sources[i].process(output);
+        sources[i].process(event);
     }
     step += 1;
     currentTime = (step * BUFFER_SIZE) / samplesPerSecond;
     //The calculated time should be the same as ctx.currentTime
     //console.log('Calculated: ' + currentTime + ' Context: ' + ctx.currentTime);
+
+    
 };
 
 sources.push(Drone());
