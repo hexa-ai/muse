@@ -13,7 +13,7 @@ function Drone() {
     var freqInc = freq / samplesPerSecond;
     
     return {
-        process: function(output, size, step) {
+        process: function(output) {
             for(var i = 0; i < output.numberOfChannels; i++) {
                 var input = event.inputBuffer.getChannelData(i);
                 var output = event.outputBuffer.getChannelData(i);
@@ -33,7 +33,7 @@ engine.onaudioprocess = function(event) {
     var input = event.inputBuffer;
     var output = event.outputBuffer;
     for(var i = 0; i < sources.length; i++) {
-        output = sources[i].process(output, 1024, step);
+        output = sources[i].process(output);
     }
     step += 1;
     currentTime = (step * BUFFER_SIZE) / samplesPerSecond;
