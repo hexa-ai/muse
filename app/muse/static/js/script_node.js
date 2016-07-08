@@ -13,28 +13,34 @@ function Drone() {
     var freqInc = freq / samplesPerSecond;
     
     return {
-        process: function(output) {
-            for(var j = 0; j < output.length; j++) {
-                phase += freqInc;
-                output[j] += Math.sin(phase * Math.PI * 2.0) * 0.01;
-                output[j] += Math.sin(phase * .75 * Math.PI * 2.0) * 0.01;
-                output[j] += Math.sin(phase * .65 * Math.PI * 2.0) * 0.01;
-                output[j] = output[j] > 1.0 ? 0.999 : output[j];
+        process: function(channels) {
+            for(var i = 0; i < channels.length; i++) {
+                var output = channels[i];
+                for(var j = 0; j < output.length; j++) {
+                    phase += freqInc;
+                    output[j] += Math.sin(phase * Math.PI * 2.0) * 0.01;
+                    output[j] += Math.sin(phase * .75 * Math.PI * 2.0) * 0.01;
+                    output[j] += Math.sin(phase * .65 * Math.PI * 2.0) * 0.01;
+                    output[j] = output[j] > 1.0 ? 0.999 : output[j];
+                }
             }
-            return output;
+            return channels;
         }
     }
 }
 
 engine.onaudioprocess = function(event) {
-    var output = event.outputBuffer.getChannelData(0);
-    // need to clear the buffer first
-    for(var i = 0; i < input.length; i++) {
-        output[i] = 0;
+    var channels = [];
+    for(var i = 0; i < event.outputBuffer.numberOfChannels; i++) {
+        var output = event.outputBuffer.getChannelData(i);
+        for(var j = 0; j < output.length; j++) {
+            output[j] = 0;
+        }
+        channels.push(output);
     }
 
     for(var i = 0; i < sources.length; i++) {
-        output = sources[i].process(output);
+        channels = sources[i].process(channels);
     }
 
     step += 1;
@@ -44,30 +50,7 @@ engine.onaudioprocess = function(event) {
 };
 
 sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
-sources.push(Drone());
+console.log(sources.length);
 source.connect(engine);
 engine.connect(ctx.destination);
 source.start(ctx.currentTime);
