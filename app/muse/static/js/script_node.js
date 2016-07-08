@@ -36,8 +36,6 @@ engine.onaudioprocess = function(event) {
     currentTime = (step * BUFFER_SIZE) / samplesPerSecond;
     //The calculated time should be the same as ctx.currentTime
     //console.log('Calculated: ' + currentTime + ' Context: ' + ctx.currentTime);
-
-    
 };
 
 sources.push(Drone());
