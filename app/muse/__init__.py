@@ -11,7 +11,6 @@ socketio = SocketIO(app, async_mode="eventlet")
 def handle_connect():
     pass
 
-
 @socketio.on('disconnect')
 def handle_disconnect():
     pass
