@@ -1,8 +1,9 @@
-var BUFFER_SIZE = 8192;
+var BUFFER_SIZE = 256;
+var SAMPLE_RATE = 44100;
+
 var step = 0;
 var sources = []
 var currentTime = 0;
-var samplesPerSecond = 44100;
 var ctx = new AudioContext();
 var source = ctx.createBufferSource();
 var engine = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
@@ -10,7 +11,7 @@ var engine = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
 function Drone() {
     var phase = 0;
     var freq = 110.0 + Math.random() * 440.0;
-    var freqInc = freq / samplesPerSecond;
+    var freqInc = freq / SAMPLE_RATE;
     
     return {
         process: function(channels) {
@@ -44,13 +45,12 @@ engine.onaudioprocess = function(event) {
     }
 
     step += 1;
-    currentTime = (step * BUFFER_SIZE) / samplesPerSecond;
+    currentTime = (step * BUFFER_SIZE) / SAMPLE_RATE;
     //The calculated time should be the same as ctx.currentTime
     //console.log('Calculated: ' + currentTime + ' Context: ' + ctx.currentTime);
 };
 
 sources.push(Drone());
-console.log(sources.length);
 source.connect(engine);
 engine.connect(ctx.destination);
 source.start(ctx.currentTime);
