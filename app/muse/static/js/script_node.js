@@ -2,20 +2,13 @@ var PI_2 = Math.PI * 2.0;
 var BUFFER_SIZE = 8192;
 var SAMPLE_RATE = 44100;
 
-var step = 0;
-var nodes = []
-var currentTime = 0;
-var ctx = new AudioContext();
-var source = ctx.createBufferSource();
-var engine = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
-
-function Drone() {
+function Drone(Hz) {
     var nodes = [];
     var phase = 0;
-    var freq = 110.0 + Math.random() * 440.0;
+    var freq = Hz || 110.0 + Math.random() * 440.0;
     var freqInc = freq / SAMPLE_RATE;
     return {
-        process: function(channels) {
+        process: function(channels, step) {
             for(var i = 0; i < channels.length; i++) {
                 var output = channels[i];
                 for(var j = 0; j < output.length; j++) {
@@ -28,7 +21,7 @@ function Drone() {
             }
 
             for(var node in nodes) {
-                nodes[node].process(channels);
+                nodes[node].process(channels, step);
             }
         },
         connect: function(node) {
@@ -43,7 +36,7 @@ function Tremelo() {
     var phase = 0.0;
     var freqInc = freq / SAMPLE_RATE;
     return {
-        process : function(channels) {
+        process : function(channels, step) {
             for(var i = 0; i < channels.length; i++) {
                 var output = channels[i];
                 for(var j = 0; j < output.length; j++) {
@@ -55,29 +48,50 @@ function Tremelo() {
     }
 }
 
-engine.onaudioprocess = function(event) {
-    var channels = [];
-    for(var i = 0; i < event.outputBuffer.numberOfChannels; i++) {
-        var output = event.outputBuffer.getChannelData(i);
-        for(var j = 0; j < output.length; j++) {
-            output[j] = 0;
+function AudioEngine() {
+    var step = 0;
+    var nodes = [];
+    var currentTime = 0;
+    var ctx = new AudioContext();   
+    var processor = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
+    processor.connect(ctx.destination);
+
+    processor.onaudioprocess = function(event) {
+        var channels = [];
+        for(var i = 0; i < event.outputBuffer.numberOfChannels; i++) {
+            var output = event.outputBuffer.getChannelData(i);
+            for(var j = 0; j < output.length; j++) output[j] = 0;
+                channels.push(output);
         }
-        channels.push(output);
-    }
 
-    for(var i = 0; i < nodes.length; i++) {
-        nodes[i].process(channels);
-    }
+        for(var i = 0; i < nodes.length; i++) {
+            nodes[i].process(channels, step);
+        }
 
-    step += 1;
-    currentTime = (step * BUFFER_SIZE) / SAMPLE_RATE;
-    //The calculated time should be the same as ctx.currentTime
-    //console.log('Calculated: ' + currentTime + ' Context: ' + ctx.currentTime);
-};
+        step += 1;
+        currentTime = (step * BUFFER_SIZE) / SAMPLE_RATE;
+        //The calculated time should be the same as ctx.currentTime
+        //console.log('Calculated: ' + currentTime + ' Context: ' + ctx.currentTime);
+    };
 
-nodes.push(
+    return {
+        ctx : ctx,
+        engine : engine,
+        getCurrentTime : function() { 
+            return currentTime; 
+        },
+        connect : function(node) {
+            nodes.push(node);
+        },
+        shutdown : function() {
+            ctx.close();
+        }
+    };
+}
+
+var engine = AudioEngine();
+engine.connect(
     Drone().connect(
         Tremelo()));
-nodes.push(Drone());
-source.connect(engine);
-engine.connect(ctx.destination);
+engine.connect(
+    Drone(500));
