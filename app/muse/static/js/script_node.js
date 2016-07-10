@@ -48,6 +48,33 @@ function Tremelo() {
     }
 }
 
+function Sequencer() {
+    var tempo = 94.0;
+    var steps = 16;
+    return {
+        process : function(channels, step) {
+            var stepInterval = ((SAMPLE_RATE * 60.0) / (steps * 4));
+            if(channels.length) {
+                var bufferSize = channels[0].length;
+                var startSampleIndex = bufferSize * step;
+                for(var i = 0; i < channels[0].length; i++) {
+                    
+                }
+            }
+        }, 
+        setSteps : function(newSteps) {
+            steps = newSteps;
+        },
+        setTempo : function (newTempo) { 
+            tempo = Math.min(Math.max(1, newTempo), 480)
+        },
+
+        loadSample : function(path) {
+
+        }
+    }
+}
+
 function AudioEngine() {
     var step = 0;
     var nodes = [];
@@ -63,11 +90,13 @@ function AudioEngine() {
             for(var j = 0; j < output.length; j++) output[j] = 0;
                 channels.push(output);
         }
-
-        for(var i = 0; i < nodes.length; i++) {
-            nodes[i].process(channels, step);
+        
+        if(channels.length >= 1) {            
+            for(var i = 0; i < nodes.length; i++) {
+                nodes[i].process(channels, step);
+            }
         }
-
+        
         step += 1;
         currentTime = (step * BUFFER_SIZE) / SAMPLE_RATE;
         //The calculated time should be the same as ctx.currentTime
@@ -95,3 +124,4 @@ engine.connect(
         Tremelo()));
 engine.connect(
     Drone(500));
+engine.connect(Sequencer());
