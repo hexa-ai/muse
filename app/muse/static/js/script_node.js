@@ -1,31 +1,56 @@
-var BUFFER_SIZE = 256;
+var PI_2 = Math.PI * 2.0;
+var BUFFER_SIZE = 8192;
 var SAMPLE_RATE = 44100;
 
 var step = 0;
-var sources = []
+var nodes = []
 var currentTime = 0;
 var ctx = new AudioContext();
 var source = ctx.createBufferSource();
 var engine = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
 
 function Drone() {
+    var nodes = [];
     var phase = 0;
     var freq = 110.0 + Math.random() * 440.0;
     var freqInc = freq / SAMPLE_RATE;
-    
     return {
         process: function(channels) {
             for(var i = 0; i < channels.length; i++) {
                 var output = channels[i];
                 for(var j = 0; j < output.length; j++) {
                     phase += freqInc;
-                    output[j] += Math.sin(phase * Math.PI * 2.0) * 0.01;
-                    output[j] += Math.sin(phase * .75 * Math.PI * 2.0) * 0.01;
-                    output[j] += Math.sin(phase * .65 * Math.PI * 2.0) * 0.01;
+                    output[j] += Math.sin(phase * PI_2) * 0.025;
+                    output[j] += Math.sin(phase * .75 * PI_2) * 0.025;
+                    output[j] += Math.sin(phase * .65 * Math.PI) * 0.025;
                     output[j] = output[j] > 1.0 ? 0.999 : output[j];
                 }
             }
-            return channels;
+
+            for(var node in nodes) {
+                nodes[node].process(channels);
+            }
+        },
+        connect: function(node) {
+           nodes.push(node);
+           return this;
+        }
+    }
+}
+
+function Tremelo() {
+    var freq = 3.5;
+    var phase = 0.0;
+    var freqInc = freq / SAMPLE_RATE;
+    return {
+        process : function(channels) {
+            for(var i = 0; i < channels.length; i++) {
+                var output = channels[i];
+                for(var j = 0; j < output.length; j++) {
+                    phase += freqInc;
+                    output[j] *= Math.abs(Math.sin(phase * PI_2));
+                }
+            }     
         }
     }
 }
@@ -40,8 +65,8 @@ engine.onaudioprocess = function(event) {
         channels.push(output);
     }
 
-    for(var i = 0; i < sources.length; i++) {
-        channels = sources[i].process(channels);
+    for(var i = 0; i < nodes.length; i++) {
+        nodes[i].process(channels);
     }
 
     step += 1;
@@ -50,7 +75,9 @@ engine.onaudioprocess = function(event) {
     //console.log('Calculated: ' + currentTime + ' Context: ' + ctx.currentTime);
 };
 
-sources.push(Drone());
+nodes.push(
+    Drone().connect(
+        Tremelo()));
+nodes.push(Drone());
 source.connect(engine);
 engine.connect(ctx.destination);
-source.start(ctx.currentTime);
