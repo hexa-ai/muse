@@ -8,7 +8,7 @@ function Drone(Hz) {
     var freq = Hz || 110.0 + Math.random() * 440.0;
     var freqInc = freq / SAMPLE_RATE;
     return {
-        process: function(channels, step) {
+        process: function(channels, cycle) {
             for(var i = 0; i < channels.length; i++) {
                 var output = channels[i];
                 for(var j = 0; j < output.length; j++) {
@@ -21,7 +21,7 @@ function Drone(Hz) {
             }
 
             for(var node in nodes) {
-                nodes[node].process(channels, step);
+                nodes[node].process(channels, cycle);
             }
         },
         connect: function(node) {
@@ -36,7 +36,7 @@ function Tremelo() {
     var phase = 0.0;
     var freqInc = freq / SAMPLE_RATE;
     return {
-        process : function(channels, step) {
+        process : function(channels, cycle) {
             for(var i = 0; i < channels.length; i++) {
                 var output = channels[i];
                 for(var j = 0; j < output.length; j++) {
@@ -48,35 +48,56 @@ function Tremelo() {
     }
 }
 
-function Sequencer() {
-    var tempo = 94.0;
-    var steps = 16;
+function SequencerSource(startPosition, source) {
+    var start = startPosition; 
+    var source = audioBuffer; 
+
     return {
-        process : function(channels, step) {
-            var stepInterval = ((SAMPLE_RATE * 60.0) / (steps * 4));
+        process : function(channels, cycle) {
+            
+        }
+    }
+}
+
+function StepSequencer() {
+    var tempo = 30.0;
+    var steps = 16;
+    var step = 0;
+    var sources = {};
+
+    return {
+        process : function(channels, cycle) {
+            var stepInterval = Math.round(((SAMPLE_RATE * 60.0) / (tempo * steps)));
             if(channels.length) {
                 var bufferSize = channels[0].length;
                 var startSampleIndex = bufferSize * step;
                 for(var i = 0; i < channels[0].length; i++) {
-                    
+                    if((startSampleIndex + i) % stepInterval == 0) {
+                        // This is where we should add a new source
+                        //console.log(step);
+                    }
                 }
             }
         }, 
         setSteps : function(newSteps) {
             steps = newSteps;
+            // resize the toggle arrays
         },
         setTempo : function (newTempo) { 
             tempo = Math.min(Math.max(1, newTempo), 480)
         },
-
-        loadSample : function(path) {
-
+        addSource : function(path) {
+            var id = sources.length;
+            sources[id] = {
+                toggles : []
+            }
+            for(var i = 0; i < steps; i++) sources[id].toggles[i] = 0;
         }
     }
 }
 
 function AudioEngine() {
-    var step = 0;
+    var cycle = 0;
     var nodes = [];
     var currentTime = 0;
     var ctx = new AudioContext();   
@@ -93,12 +114,12 @@ function AudioEngine() {
         
         if(channels.length >= 1) {            
             for(var i = 0; i < nodes.length; i++) {
-                nodes[i].process(channels, step);
+                nodes[i].process(channels, cycle);
             }
         }
         
-        step += 1;
-        currentTime = (step * BUFFER_SIZE) / SAMPLE_RATE;
+        cycle += 1;
+        currentTime = (cycle * BUFFER_SIZE) / SAMPLE_RATE;
         //The calculated time should be the same as ctx.currentTime
         //console.log('Calculated: ' + currentTime + ' Context: ' + ctx.currentTime);
     };
@@ -124,4 +145,4 @@ engine.connect(
         Tremelo()));
 engine.connect(
     Drone(500));
-engine.connect(Sequencer());
+engine.connect(StepSequencer());
