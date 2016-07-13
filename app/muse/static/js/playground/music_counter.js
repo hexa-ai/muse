@@ -84,8 +84,6 @@ function AudioEngine() {
     var processor = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
     processor.connect(ctx.destination);
 
-
-
     processor.onaudioprocess = function(event) {
         var channels = [];
         for(var i = 0; i < event.outputBuffer.numberOfChannels; i++) {
