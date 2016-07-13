@@ -61,16 +61,12 @@ loader.send();
                     	} else {
                     		step++;
                     	}
+                    	// output[i] = tempBuffer[startSampleIndex+i];
                     }
-                 //    if((startSampleIndex+i)==tempBuffer.length - 1) {
-                 //    	startSampleIndex = 0;
-                 //    	continue;
-                 //    } else {
-                 //    	output[i] = tempBuffer[startSampleIndex+i];
-                	// }
+                    output[i] = tempBuffer[startSampleIndex+i];
                 }
             }
-        }, 
+        },
         setSteps : function(newSteps) {
             steps = newSteps;
             // resize the toggle arrays
