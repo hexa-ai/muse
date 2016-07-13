@@ -5,15 +5,11 @@ var SAMPLE_RATE = 44100;
 function StepSequencer() {
 	var ctx;
     var tempo = 30.0;
-    // var tempo = 90.0;
-
     var steps = 16;
     var step = 0;
-    // var stepCounter = 0;
     var sources = {};
     var loader = new AudioSampleLoader();
     var sampleBuffers;
-    // var playHead = 0;
     var toggles = [
     	[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     	[1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1] //kickdrum
@@ -41,12 +37,8 @@ loader.send();
     	ctx: '',
     	name : 'Step Sequencer',
         process : function(channels, cycle) {
-        	var testBuffer = this.ctx.createBufferSource();
-        	var testBuffer2 = this.ctx.createBufferSource();
             var stepInterval = Math.round(((SAMPLE_RATE * 60.0) / (tempo * steps))); //5513
             
-
-
             if(channels.length) {
                 var bufferSize = channels[0].length;
                 var startSampleIndex = bufferSize * cycle;
