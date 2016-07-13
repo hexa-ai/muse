@@ -48,10 +48,28 @@ function Tremelo() {
     }
 }
 
+function SampleBank(ctx) {
+    var samples = {};
+    return {
+        samples : samples,
+        load : function(url, error) {
+            var req = new XMLHttpRequest();
+            req.open('GET', url, true);
+            req.responseType = 'arraybuffer';
+            req.onload = function() {
+                ctx.decodeAudioData(req.response, function(buffer) {
+                    samples[samples.length] = buffer;
+                }, error);
+            }
+            req.send();
+        }
+    }
+}
+
 function SequencerSource(startPosition, source) {
     var start = startPosition; 
     var source = audioBuffer; 
-
+    var playhead = 0;
     return {
         process : function(channels, cycle) {
             
@@ -86,10 +104,11 @@ function StepSequencer() {
         setTempo : function (newTempo) { 
             tempo = Math.min(Math.max(1, newTempo), 480)
         },
-        addSource : function(path) {
+        addSource : function(buffer) {
             var id = sources.length;
             sources[id] = {
-                toggles : []
+                toggles : [],
+                buffer : buffer
             }
             for(var i = 0; i < steps; i++) sources[id].toggles[i] = 0;
         }
@@ -103,13 +122,12 @@ function AudioEngine() {
     var ctx = new AudioContext();   
     var processor = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
     processor.connect(ctx.destination);
-
     processor.onaudioprocess = function(event) {
         var channels = [];
         for(var i = 0; i < event.outputBuffer.numberOfChannels; i++) {
             var output = event.outputBuffer.getChannelData(i);
             for(var j = 0; j < output.length; j++) output[j] = 0;
-                channels.push(output);
+            channels.push(output);
         }
         
         if(channels.length >= 1) {            
@@ -140,9 +158,6 @@ function AudioEngine() {
 }
 
 var engine = AudioEngine();
-engine.connect(
-    Drone().connect(
-        Tremelo()));
-engine.connect(
-    Drone(500));
+var sampleBank = SampleBank(engine.ctx);
+sampleBank.load('./static/media/sound/Kick05-Longer.wav');
 engine.connect(StepSequencer());
