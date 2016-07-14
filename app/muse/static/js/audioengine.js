@@ -123,13 +123,27 @@ function StepSequencer() {
     var sources = [];
     return {
         process : function(channels, cycle) {
+            // start by marking sources as complete
+            var completeIndices = [];
+            for(var i = 0; i < sources.length; i++) {
+                if(sources[i].isComplete()) {
+                    completeIndices.push(i);
+                }
+            }
+            
+            // remove complete sources
+            for(var i = 0; i < completeIndices.length; i++) {
+                sources.splice(completeIndices[i], 1);
+            }
+
+            // check the current step and add sources if we are on a 16th note
             var stepInterval = Math.round(SAMPLE_RATE * 60.0 / tempo / 16);
             if(channels.length) {
                 var bufferSize = channels[0].length;
                 var startSampleIndex = bufferSize * cycle;
                 for(var i = 0; i < bufferSize; i++) {
                     if((startSampleIndex + i) % stepInterval == 0) {
-                        var currentStep = step % steps;
+                        var currentStep = step++ % steps;
                         for(var j = 0; j < voices.length; j++) {
                             var voice = voices[j];
                             if(currentStep < voice.toggles.length) {
@@ -139,25 +153,17 @@ function StepSequencer() {
                                 }
                             }
                         }
-                        step++; 
                     }
                 }
             }
             
-            var completeIndices = [];
+            // process each of the active sources
             for(var i = 0; i < sources.length; i++) {
                 if(!sources[i].isComplete()) {
                     sources[i].process(channels, cycle);
-                }else{
-                    completeIndices.push(i);
-                }
+                }            
             }
-
-            /*
-            for(var i = 0; i < completeIndices.length; i++) {
-                sources.splice(completeIndices[i], 1);
-            }
-            */
+            
         }, 
         setSteps : function(newSteps) {
             steps = newSteps;
