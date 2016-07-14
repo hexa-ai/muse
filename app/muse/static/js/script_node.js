@@ -98,7 +98,7 @@ function StepSequencer() {
     var steps = 16;
     var step = 0;
     var voices = [];
-
+    var sources = [];
     return {
         process : function(channels, cycle) {
             var stepInterval = Math.round(((SAMPLE_RATE * 60.0) / (tempo * steps)));
@@ -108,8 +108,16 @@ function StepSequencer() {
                 
                 for(var i = 0; i < channels[0].length; i++) {
                     if((startSampleIndex + i) % stepInterval == 0) {
-                        // This is where we should add a new source
-                        //console.log(step);
+                        var toggle = step % steps;
+                        for(var j = 0; j < voices.length; j++) {
+                            var voice = voices[j];
+                            if(voice.toggles.length >= toggle) {
+                                if(voice.toggles[j]) {
+                                    // create new source
+                                }
+                            }
+                        }
+                        step++; 
                     }
                 }
             }
@@ -125,8 +133,7 @@ function StepSequencer() {
             var toggles = [];
             var id = voices.length;
             for(var i = 0; i < steps; i++) toggles[i] = 0;
-            voices.push(Voice(id, buffer, name, toggles));
-            console.log(voices[id]);
+            voices.push(SequencerVoice(id, buffer, name, toggles));
         }
     }
 }
@@ -179,9 +186,6 @@ var sampleBank = SampleBank(engine.ctx);
 var files = [ {
         path : './static/media/sound/Kick05-Longer.wav',
         name : 'Kick 1'
-    }, {
-        path : './static/media/sound/INTENTIONAL_ERROR.wav',
-        name : 'Kick 2' 
     }
 ]
 
