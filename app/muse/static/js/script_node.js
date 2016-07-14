@@ -52,13 +52,20 @@ function SampleBank(ctx) {
     var samples = {};
     return {
         samples : samples,
-        load : function(url, error) {
+        // TODO: Handle all possible error cases
+        load : function(url, name, success, error) {
             var req = new XMLHttpRequest();
             req.open('GET', url, true);
             req.responseType = 'arraybuffer';
             req.onload = function() {
                 ctx.decodeAudioData(req.response, function(buffer) {
-                    samples[samples.length] = buffer;
+                    var id = samples.length;
+                    samples[id] = {
+                        id : id,
+                        buffer : buffer,
+                        name : name
+                    }
+                    if(success) success(samples[id]);
                 }, error);
             }
             req.send();
@@ -72,16 +79,25 @@ function SequencerSource(startPosition, source) {
     var playhead = 0;
     return {
         process : function(channels, cycle) {
-            
+              
         }
     }
 }
 
+function SequencerVoice(id, buffer, name, toggles) {
+    return {
+        buffer : buffer,
+        id : id,
+        name : name, 
+        toggles : toggles
+    }
+}
+
 function StepSequencer() {
-    var tempo = 30.0;
+    var tempo = 60.0;
     var steps = 16;
     var step = 0;
-    var sources = {};
+    var voices = [];
 
     return {
         process : function(channels, cycle) {
@@ -89,6 +105,7 @@ function StepSequencer() {
             if(channels.length) {
                 var bufferSize = channels[0].length;
                 var startSampleIndex = bufferSize * step;
+                
                 for(var i = 0; i < channels[0].length; i++) {
                     if((startSampleIndex + i) % stepInterval == 0) {
                         // This is where we should add a new source
@@ -104,13 +121,12 @@ function StepSequencer() {
         setTempo : function (newTempo) { 
             tempo = Math.min(Math.max(1, newTempo), 480)
         },
-        addSource : function(buffer) {
-            var id = sources.length;
-            sources[id] = {
-                toggles : [],
-                buffer : buffer
-            }
-            for(var i = 0; i < steps; i++) sources[id].toggles[i] = 0;
+        addVoice : function(buffer, name) {
+            var toggles = [];
+            var id = voices.length;
+            for(var i = 0; i < steps; i++) toggles[i] = 0;
+            voices.push(Voice(id, buffer, name, toggles));
+            console.log(voices[id]);
         }
     }
 }
@@ -158,6 +174,23 @@ function AudioEngine() {
 }
 
 var engine = AudioEngine();
+var sequencer = StepSequencer();
 var sampleBank = SampleBank(engine.ctx);
-sampleBank.load('./static/media/sound/Kick05-Longer.wav');
-engine.connect(StepSequencer());
+var files = [ {
+        path : './static/media/sound/Kick05-Longer.wav',
+        name : 'Kick 1'
+    }, {
+        path : './static/media/sound/INTENTIONAL_ERROR.wav',
+        name : 'Kick 2' 
+    }
+]
+
+for (var i = 0; i < files.length; i++) {
+    sampleBank.load(files[i].path, files[i].name, function(sample) {
+       sequencer.addVoice(sample.buffer, sample.name);
+    }, function(event) {
+        console.error('Could not load file: ' + event);
+    });
+}
+
+engine.connect(sequencer);
