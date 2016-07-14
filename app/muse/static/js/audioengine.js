@@ -116,14 +116,14 @@ function SequencerVoice(id, buffer, name, toggles) {
 }
 
 function StepSequencer() {
-    var tempo = 30.0;
-    var steps = 16;
+    var tempo = 60.0;
+    var steps = 32;
     var step = 0;
     var voices = [];
     var sources = [];
     return {
         process : function(channels, cycle) {
-            var stepInterval = Math.round(((SAMPLE_RATE * 60.0) / (tempo * steps)));
+            var stepInterval = Math.round(SAMPLE_RATE * 60.0 / tempo / 16);
             if(channels.length) {
                 var bufferSize = channels[0].length;
                 var startSampleIndex = bufferSize * cycle;
@@ -143,7 +143,7 @@ function StepSequencer() {
                     }
                 }
             }
-
+            
             var completeIndices = [];
             for(var i = 0; i < sources.length; i++) {
                 if(!sources[i].isComplete()) {
@@ -153,9 +153,11 @@ function StepSequencer() {
                 }
             }
 
+            /*
             for(var i = 0; i < completeIndices.length; i++) {
                 sources.splice(completeIndices[i], 1);
             }
+            */
         }, 
         setSteps : function(newSteps) {
             steps = newSteps;
@@ -197,7 +199,7 @@ function AudioEngine() {
     var processor = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
     processor.connect(gain);
     gain.connect(ctx.destination);
-    gain.gain.value = 0.5;
+    gain.gain.value = 0.4;
     processor.onaudioprocess = function(event) {
         // CONSIDERATION: Zero out the data and then pass event.outputBuffer to each node
         // rather than the arrays in channels. This could allow for faster copies from buffer to buffer
@@ -240,17 +242,17 @@ var engine = AudioEngine();
 var sequencer = StepSequencer();
 var sampleBank = SampleBank(engine.ctx);
 var files = [ {
-        path : './static/media/sound/Kick05-Longer.wav',
+        path : './static/media/sound/Alesis_HR16A_03.wav',
         name : 'Kick 1',
-        toggles : [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0]
+        toggles : [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0]
     }, {
-        path: './static/media/sound/Hats04-TickyHi3.wav',
+        path: './static/media/sound/808_HH__CL.wav',
         name : 'Hi-hat',
-        toggles : [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0]
+        toggles : [1,0,1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]
     }, {
-        path : './static/media/sound/Snare04-Hi-Simmons1.wav',
+        path : './static/media/sound/Alesis_HR16A_48.wav',
         name : 'Snare',
-        toggles : [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0]
+        toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     }
 ]
 
