@@ -49,7 +49,7 @@ function Tremelo() {
 }
 
 function SampleBank(ctx) {
-    var samples = {};
+    var samples = [];
     return {
         samples : samples,
         // TODO: Handle all possible error cases
@@ -60,11 +60,11 @@ function SampleBank(ctx) {
             req.onload = function() {
                 ctx.decodeAudioData(req.response, function(buffer) {
                     var id = samples.length;
-                    samples[id] = {
+                    samples.push({
                         id : id,
                         buffer : buffer,
                         name : name
-                    }
+                    })
                     if(success) success(samples[id]);
                 }, error);
             }
@@ -132,7 +132,7 @@ function StepSequencer() {
                         var currentStep = step % steps;
                         for(var j = 0; j < voices.length; j++) {
                             var voice = voices[j];
-                            if(voice.toggles.length >= currentStep) {
+                            if(currentStep < voice.toggles.length) {
                                 if(voice.toggles[currentStep]) {
                                     var source = SequencerSource(startSampleIndex + i, voice.buffer);
                                     sources.push(source);
@@ -172,8 +172,7 @@ function StepSequencer() {
         enableVoiceAtSteps : function(id, values) {
             if(id < voices.length && voices[id]) {
                 for(var i = 0; i < values.length; i++) {
-                    console.log(i < voices[id].toggles.length);
-                    if(i < voices[id].toggles.length) {
+                    if(i <= voices[id].toggles.length) {
                         voices[id].toggles[i] = values[i];
                     }
                 } 
@@ -185,7 +184,6 @@ function StepSequencer() {
             for(var i = 0; i < steps; i++) toggles[i] = 0;
             var voice = SequencerVoice(id, buffer, name, toggles);
             voices.push(voice);
-            return voice 
         }
     }
 }
@@ -243,21 +241,35 @@ var sequencer = StepSequencer();
 var sampleBank = SampleBank(engine.ctx);
 var files = [ {
         path : './static/media/sound/Kick05-Longer.wav',
-        name : 'Kick 1'
+        name : 'Kick 1',
+        toggles : [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0]
+    }, {
+        path: './static/media/sound/Hats04-TickyHi3.wav',
+        name : 'Hi-hat',
+        toggles : [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0]
+    }, {
+        path : './static/media/sound/Snare04-Hi-Simmons1.wav',
+        name : 'Snare',
+        toggles : [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0]
     }
 ]
 
-for (var i = 0; i < files.length; i++) {
-    sampleBank.load(files[i].path, files[i].name, 
-    function(sample) {
-        sequencer.addVoice(sample.buffer, sample.name);
-        sequencer.enableVoiceAtStep(0, 0, true);
-        sequencer.enableVoiceAtSteps(0, [1, 0, 1, 0, 0, 0, 1])
+var loadCount = 0;
+function onSampleLoadSuccess(sample) {
+    loadCount++;
+    sequencer.addVoice(sample.buffer, sample.name);
+    sequencer.enableVoiceAtSteps(sample.id, files[sample.id].toggles);
+
+    if(loadCount >= files.length) {
         engine.connect(sequencer);
-        
-    }, 
-    function(event) {
-        console.error('Could not load file: ' + event);
-    });
+    } else {
+        var file = files[loadCount];
+        sampleBank.load(file.path, file.name, onSampleLoadSuccess);
+    }
 }
 
+function onSampleLoadError(error) {
+    console.error(error);
+} 
+
+sampleBank.load(files[0].path, files[0].name, onSampleLoadSuccess, onSampleLoadError);
