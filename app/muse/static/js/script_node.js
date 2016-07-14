@@ -73,6 +73,9 @@ function SampleBank(ctx) {
     }
 }
 
+// TODO: Currently a sequencer source is only capable of playing back samples from an audio buffer
+// Would be cool if this object represented a more generic sound source so that it could 
+// provide audio data from a custom algorithmic source
 function SequencerSource(startPosition, source) {
     var start = startPosition; 
     var source = source; 
