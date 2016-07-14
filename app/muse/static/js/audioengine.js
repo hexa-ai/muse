@@ -1,5 +1,5 @@
 var PI_2 = Math.PI * 2.0;
-var BUFFER_SIZE = 8192;
+var BUFFER_SIZE = 1024;
 var SAMPLE_RATE = 44100;
 
 function Drone(Hz) {
@@ -93,7 +93,7 @@ function SequencerSource(startPosition, source) {
                     if(sampleStartIndex + j >= start) {
                         if(index < source.length) {
                             // TODO: Look at copyToChannel methods
-                            channels[i][j] += buffer[index];
+                            channels[i][j] += buffer[index]
                             index++;
                         }
                     }
@@ -164,20 +164,28 @@ function StepSequencer() {
         setTempo : function (newTempo) { 
             tempo = Math.min(Math.max(1, newTempo), 480)
         },
+        enableVoiceAtStep : function(id, step, enable) {
+            if(id < voices.length && voices[id]) {
+                voices[id].toggles[step] = enable ? 1 : 0;
+            }
+        },
+        enableVoiceAtSteps : function(id, values) {
+            if(id < voices.length && voices[id]) {
+                for(var i = 0; i < values.length; i++) {
+                    console.log(i < voices[id].toggles.length);
+                    if(i < voices[id].toggles.length) {
+                        voices[id].toggles[i] = values[i];
+                    }
+                } 
+            }    
+        },
         addVoice : function(buffer, name) {
             var toggles = [];
             var id = voices.length;
             for(var i = 0; i < steps; i++) toggles[i] = 0;
-            // TODO: Remove next line
-            toggles[0] = true;
-            toggles[2] = true;
-            toggles[4] = true;
-            toggles[5] = true;
-            toggles[6] = true;
-            toggles[9] = true;
-            toggles[11] = true;
-            toggles[14] = true;
-            voices.push(SequencerVoice(id, buffer, name, toggles));
+            var voice = SequencerVoice(id, buffer, name, toggles);
+            voices.push(voice);
+            return voice 
         }
     }
 }
@@ -187,8 +195,11 @@ function AudioEngine() {
     var nodes = [];
     var currentTime = 0;
     var ctx = new AudioContext();   
+    var gain = ctx.createGain();
     var processor = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
-    processor.connect(ctx.destination);
+    processor.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.value = 0.5;
     processor.onaudioprocess = function(event) {
         // CONSIDERATION: Zero out the data and then pass event.outputBuffer to each node
         // rather than the arrays in channels. This could allow for faster copies from buffer to buffer
@@ -213,7 +224,8 @@ function AudioEngine() {
 
     return {
         ctx : ctx,
-        engine : engine,
+        processor : processor,
+        gain : gain,
         getCurrentTime : function() { 
             return currentTime; 
         },
@@ -239,9 +251,13 @@ for (var i = 0; i < files.length; i++) {
     sampleBank.load(files[i].path, files[i].name, 
     function(sample) {
         sequencer.addVoice(sample.buffer, sample.name);
+        sequencer.enableVoiceAtStep(0, 0, true);
+        sequencer.enableVoiceAtSteps(0, [1, 0, 1, 0, 0, 0, 1])
+        engine.connect(sequencer);
+        
     }, 
     function(event) {
         console.error('Could not load file: ' + event);
     });
 }
-engine.connect(sequencer);
+
