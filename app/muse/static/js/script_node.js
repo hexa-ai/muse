@@ -85,6 +85,8 @@ function SequencerSource(startPosition, source) {
             var indexStart = index;
             var sampleStartIndex = BUFFER_SIZE * cycle;
             for(var i = 0; i < channels.length; i++) {
+                // TODO: Thre is no certainty here about whether or not the 
+                // source and the channels will contain the same number of buffers
                 var buffer = source.getChannelData(i);
                 index = indexStart;
                 for(var j = 0; j < BUFFER_SIZE; j++) {
@@ -188,6 +190,8 @@ function AudioEngine() {
     var processor = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
     processor.connect(ctx.destination);
     processor.onaudioprocess = function(event) {
+        // CONSIDERATION: Zero out the data and then pass event.outputBuffer to each node
+        // rather than the arrays in channels. This could allow for faster copies from buffer to buffer
         var channels = [];
         for(var i = 0; i < event.outputBuffer.numberOfChannels; i++) {
             var output = event.outputBuffer.getChannelData(i);
