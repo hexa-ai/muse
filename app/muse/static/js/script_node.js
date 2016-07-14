@@ -75,11 +75,28 @@ function SampleBank(ctx) {
 
 function SequencerSource(startPosition, source) {
     var start = startPosition; 
-    var source = audioBuffer; 
-    var playhead = 0;
+    var source = source; 
+    var index = 0;
     return {
         process : function(channels, cycle) {
-              
+            var indexStart = index;
+            var sampleStartIndex = BUFFER_SIZE * cycle;
+            for(var i = 0; i < channels.length; i++) {
+                var buffer = source.getChannelData(i);
+                index = indexStart;
+                for(var j = 0; j < BUFFER_SIZE; j++) {
+                    if(sampleStartIndex + j >= start) {
+                        if(index < source.length) {
+                            // TODO: Look at copyToChannel methods
+                            channels[i][j] += buffer[index];
+                            index++;
+                        }
+                    }
+                }
+            }
+        },
+        isComplete : function() {
+            return index >= source.getChannelData(0).length;
         }
     }
 }
@@ -94,7 +111,7 @@ function SequencerVoice(id, buffer, name, toggles) {
 }
 
 function StepSequencer() {
-    var tempo = 60.0;
+    var tempo = 30.0;
     var steps = 16;
     var step = 0;
     var voices = [];
@@ -104,22 +121,35 @@ function StepSequencer() {
             var stepInterval = Math.round(((SAMPLE_RATE * 60.0) / (tempo * steps)));
             if(channels.length) {
                 var bufferSize = channels[0].length;
-                var startSampleIndex = bufferSize * step;
-                
-                for(var i = 0; i < channels[0].length; i++) {
+                var startSampleIndex = bufferSize * cycle;
+                for(var i = 0; i < bufferSize; i++) {
                     if((startSampleIndex + i) % stepInterval == 0) {
-                        var toggle = step % steps;
+                        var currentStep = step % steps;
                         for(var j = 0; j < voices.length; j++) {
                             var voice = voices[j];
-                            if(voice.toggles.length >= toggle) {
-                                if(voice.toggles[j]) {
-                                    // create new source
+                            if(voice.toggles.length >= currentStep) {
+                                if(voice.toggles[currentStep]) {
+                                    var source = SequencerSource(startSampleIndex + i, voice.buffer);
+                                    sources.push(source);
                                 }
                             }
                         }
                         step++; 
                     }
                 }
+            }
+
+            var completeIndices = [];
+            for(var i = 0; i < sources.length; i++) {
+                if(!sources[i].isComplete()) {
+                    sources[i].process(channels, cycle);
+                }else{
+                    completeIndices.push(i);
+                }
+            }
+
+            for(var i = 0; i < completeIndices.length; i++) {
+                sources.splice(completeIndices[i], 1);
             }
         }, 
         setSteps : function(newSteps) {
@@ -133,6 +163,15 @@ function StepSequencer() {
             var toggles = [];
             var id = voices.length;
             for(var i = 0; i < steps; i++) toggles[i] = 0;
+            // TODO: Remove next line
+            toggles[0] = true;
+            toggles[2] = true;
+            toggles[4] = true;
+            toggles[5] = true;
+            toggles[6] = true;
+            toggles[9] = true;
+            toggles[11] = true;
+            toggles[14] = true;
             voices.push(SequencerVoice(id, buffer, name, toggles));
         }
     }
@@ -190,11 +229,12 @@ var files = [ {
 ]
 
 for (var i = 0; i < files.length; i++) {
-    sampleBank.load(files[i].path, files[i].name, function(sample) {
-       sequencer.addVoice(sample.buffer, sample.name);
-    }, function(event) {
+    sampleBank.load(files[i].path, files[i].name, 
+    function(sample) {
+        sequencer.addVoice(sample.buffer, sample.name);
+    }, 
+    function(event) {
         console.error('Could not load file: ' + event);
     });
 }
-
 engine.connect(sequencer);
