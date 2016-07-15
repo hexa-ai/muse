@@ -81,19 +81,20 @@ function SequencerSource(startPosition, source) {
     var source = source; 
     var index = 0;
     return {
-        process : function(channels, cycle) {
+        process : function(outputBuffer, cycle) {
             var indexStart = index;
             var sampleStartIndex = BUFFER_SIZE * cycle;
-            for(var i = 0; i < channels.length; i++) {
+            for(var i = 0; i < outputBuffer.numberOfChannels; i++) {
                 // TODO: Thre is no certainty here about whether or not the 
                 // source and the channels will contain the same number of buffers
                 var buffer = source.getChannelData(i);
+                var channel = outputBuffer.getChannelData(i);
                 index = indexStart;
                 for(var j = 0; j < BUFFER_SIZE; j++) {
                     if(sampleStartIndex + j >= start) {
                         if(index < source.length) {
                             // TODO: Look at copyToChannel methods
-                            channels[i][j] += buffer[index]
+                            channel[j] += buffer[index]
                             index++;
                         }
                     }
@@ -111,7 +112,8 @@ function SequencerVoice(id, buffer, name, toggles) {
         buffer : buffer,
         id : id,
         name : name, 
-        toggles : toggles
+        toggles : toggles,
+        volume : 1.0
     }
 }
 
@@ -122,7 +124,7 @@ function StepSequencer() {
     var voices = [];
     var sources = [];
     return {
-        process : function(channels, cycle) {
+        process : function(outputBuffer, cycle) {
             // start by marking sources as complete
             var completeIndices = [];
             for(var i = 0; i < sources.length; i++) {
@@ -138,8 +140,8 @@ function StepSequencer() {
 
             // check the current step and add sources if we are on a 16th note
             var stepInterval = Math.round(SAMPLE_RATE * 60.0 / tempo / 16);
-            if(channels.length) {
-                var bufferSize = channels[0].length;
+            if(outputBuffer.numberOfChannels) {
+                var bufferSize = outputBuffer.getChannelData(0).length;
                 var startSampleIndex = bufferSize * cycle;
                 for(var i = 0; i < bufferSize; i++) {
                     if((startSampleIndex + i) % stepInterval == 0) {
@@ -160,10 +162,9 @@ function StepSequencer() {
             // process each of the active sources
             for(var i = 0; i < sources.length; i++) {
                 if(!sources[i].isComplete()) {
-                    sources[i].process(channels, cycle);
+                    sources[i].process(outputBuffer, cycle);
                 }            
             }
-            
         }, 
         setSteps : function(newSteps) {
             steps = newSteps;
@@ -209,16 +210,14 @@ function AudioEngine() {
     processor.onaudioprocess = function(event) {
         // CONSIDERATION: Zero out the data and then pass event.outputBuffer to each node
         // rather than the arrays in channels. This could allow for faster copies from buffer to buffer
-        var channels = [];
         for(var i = 0; i < event.outputBuffer.numberOfChannels; i++) {
             var output = event.outputBuffer.getChannelData(i);
             for(var j = 0; j < output.length; j++) output[j] = 0;
-            channels.push(output);
         }
         
-        if(channels.length >= 1) {            
+        if(event.outputBuffer.numberOfChannels > 0) {            
             for(var i = 0; i < nodes.length; i++) {
-                nodes[i].process(channels, cycle);
+                nodes[i].process(event.outputBuffer, cycle);
             }
         }
         
