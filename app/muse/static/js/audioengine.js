@@ -1,5 +1,5 @@
 var PI_2 = Math.PI * 2.0;
-var BUFFER_SIZE = 1024;
+var BUFFER_SIZE = 8192;
 var SAMPLE_RATE = 44100;
 
 function Drone(Hz) {
@@ -76,24 +76,24 @@ function SampleBank(ctx) {
 // TODO: Currently a sequencer source is only capable of playing back samples from an audio buffer
 // Would be cool if this object represented a more generic sound source so that it could 
 // provide audio data from a custom algorithmic source
-function SequencerSource(startPosition, source) {
-    var start = startPosition; 
-    var source = source; 
+function SequencerSource(id, startPosition, source) {
+    var id = id;
     var index = 0;
+    var source = source; 
+    var start = startPosition; 
+
     return {
+        id : id,
         process : function(outputBuffer, cycle) {
             var indexStart = index;
             var sampleStartIndex = BUFFER_SIZE * cycle;
             for(var i = 0; i < outputBuffer.numberOfChannels; i++) {
-                // TODO: Thre is no certainty here about whether or not the 
-                // source and the channels will contain the same number of buffers
                 var buffer = source.getChannelData(i);
                 var channel = outputBuffer.getChannelData(i);
                 index = indexStart;
                 for(var j = 0; j < BUFFER_SIZE; j++) {
                     if(sampleStartIndex + j >= start) {
                         if(index < source.length) {
-                            // TODO: Look at copyToChannel methods
                             channel[j] += buffer[index]
                             index++;
                         }
@@ -102,7 +102,7 @@ function SequencerSource(startPosition, source) {
             }
         },
         isComplete : function() {
-            return index >= source.getChannelData(0).length;
+            return index >= source.length;
         }
     }
 }
@@ -118,26 +118,14 @@ function SequencerVoice(id, buffer, name, toggles) {
 }
 
 function StepSequencer() {
-    var tempo = 60.0;
+    var tempo = 80.0;
     var steps = 32;
     var step = 0;
     var voices = [];
-    var sources = [];
+    var sourceId = 0;
+    var sources = {};
     return {
         process : function(outputBuffer, cycle) {
-            // start by marking sources as complete
-            var completeIndices = [];
-            for(var i = 0; i < sources.length; i++) {
-                if(sources[i].isComplete()) {
-                    completeIndices.push(i);
-                }
-            }
-            
-            // remove complete sources
-            for(var i = 0; i < completeIndices.length; i++) {
-                sources.splice(completeIndices[i], 1);
-            }
-
             // check the current step and add sources if we are on a 16th note
             var stepInterval = Math.round(SAMPLE_RATE * 60.0 / tempo / 16);
             if(outputBuffer.numberOfChannels) {
@@ -150,8 +138,10 @@ function StepSequencer() {
                             var voice = voices[j];
                             if(currentStep < voice.toggles.length) {
                                 if(voice.toggles[currentStep]) {
-                                    var source = SequencerSource(startSampleIndex + i, voice.buffer);
-                                    sources.push(source);
+                                    var source = SequencerSource(sourceId, startSampleIndex + i, voice.buffer);
+                                    //sources.push(source);
+                                    sources[sourceId] = source;
+                                    sourceId++;
                                 }
                             }
                         }
@@ -159,11 +149,12 @@ function StepSequencer() {
                 }
             }
             
-            // process each of the active sources
-            for(var i = 0; i < sources.length; i++) {
-                if(!sources[i].isComplete()) {
+            for(var i in sources) {
+                if(sources[i].isComplete()) {
+                    delete sources[i];
+                }else{
                     sources[i].process(outputBuffer, cycle);
-                }            
+                }
             }
         }, 
         setSteps : function(newSteps) {
@@ -208,8 +199,6 @@ function AudioEngine() {
     gain.connect(ctx.destination);
     gain.gain.value = 0.4;
     processor.onaudioprocess = function(event) {
-        // CONSIDERATION: Zero out the data and then pass event.outputBuffer to each node
-        // rather than the arrays in channels. This could allow for faster copies from buffer to buffer
         for(var i = 0; i < event.outputBuffer.numberOfChannels; i++) {
             var output = event.outputBuffer.getChannelData(i);
             for(var j = 0; j < output.length; j++) output[j] = 0;
@@ -246,7 +235,7 @@ function AudioEngine() {
 var engine = AudioEngine();
 var sequencer = StepSequencer();
 var sampleBank = SampleBank(engine.ctx);
-var files = [ {
+var files = [{
         path : './static/media/sound/Alesis_HR16A_03.wav',
         name : 'Kick 1',
         toggles : [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0]
@@ -257,6 +246,10 @@ var files = [ {
     }, {
         path : './static/media/sound/Alesis_HR16A_48.wav',
         name : 'Snare',
+        toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    }, {
+        path : './static/media/sound/Clap 01 - Low.wav',
+        name : 'Clap', 
         toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     }
 ]
