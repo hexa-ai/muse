@@ -112,7 +112,7 @@ function SequencerVoice(id, buffer, name, toggles) {
         buffer : buffer,
         id : id,
         name : name, 
-        toggles : toggles,
+        toggles : toggles
     }
 }
 
