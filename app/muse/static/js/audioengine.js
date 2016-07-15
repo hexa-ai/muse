@@ -113,7 +113,6 @@ function SequencerVoice(id, buffer, name, toggles) {
         id : id,
         name : name, 
         toggles : toggles,
-        volume : 1.0
     }
 }
 
@@ -212,8 +211,6 @@ function AudioEngine() {
         
         cycle += 1;
         currentTime = (cycle * BUFFER_SIZE) / SAMPLE_RATE;
-        //The calculated time should be the same as ctx.currentTime
-        //console.log('Calculated: ' + currentTime + ' Context: ' + ctx.currentTime);
     };
 
     return {
