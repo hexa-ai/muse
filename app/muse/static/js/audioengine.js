@@ -110,6 +110,7 @@ function SequencerSource(id, startPosition, source) {
 function SequencerVoice(id, buffer, name, toggles) {
     return {
         buffer : buffer,
+        enabled : true,
         id : id,
         name : name, 
         toggles : toggles
@@ -124,6 +125,32 @@ function StepSequencer() {
     var sourceId = 0;
     var sources = {};
     return {
+        addVoice : function(buffer, name) {
+            var toggles = [];
+            var id = voices.length;
+            for(var i = 0; i < steps; i++) toggles[i] = 0;
+            var voice = SequencerVoice(id, buffer, name, toggles);
+            voices.push(voice);
+        },
+        enableVoiceAtStep : function(id, step, enable) {
+            if(id < voices.length && voices[id]) {
+                voices[id].toggles[step] = enable ? 1 : 0;
+            }
+        },
+        enableVoiceAtSteps : function(id, values) {
+            if(id < voices.length && voices[id]) {
+                for(var i = 0; i < values.length; i++) {
+                    if(i <= voices[id].toggles.length) {
+                        voices[id].toggles[i] = values[i];
+                    }
+                } 
+            }    
+        },
+        enableVoice : function(id, enable) {
+            if(voices[id]) {
+                voices[id].enabled = enable;
+            }
+        },
         process : function(outputBuffer, cycle) {
             // check the current step and add sources if we are on a 16th note
             var stepInterval = Math.round(SAMPLE_RATE * 60.0 / tempo / 16);
@@ -135,7 +162,7 @@ function StepSequencer() {
                         var currentStep = step++ % steps;
                         for(var j = 0; j < voices.length; j++) {
                             var voice = voices[j];
-                            if(currentStep < voice.toggles.length) {
+                            if(voice.enabled && currentStep < voice.toggles.length) {
                                 if(voice.toggles[currentStep]) {
                                     var source = SequencerSource(sourceId, startSampleIndex + i, voice.buffer);
                                     //sources.push(source);
@@ -162,27 +189,6 @@ function StepSequencer() {
         },
         setTempo : function (newTempo) { 
             tempo = Math.min(Math.max(1, newTempo), 480)
-        },
-        enableVoiceAtStep : function(id, step, enable) {
-            if(id < voices.length && voices[id]) {
-                voices[id].toggles[step] = enable ? 1 : 0;
-            }
-        },
-        enableVoiceAtSteps : function(id, values) {
-            if(id < voices.length && voices[id]) {
-                for(var i = 0; i < values.length; i++) {
-                    if(i <= voices[id].toggles.length) {
-                        voices[id].toggles[i] = values[i];
-                    }
-                } 
-            }    
-        },
-        addVoice : function(buffer, name) {
-            var toggles = [];
-            var id = voices.length;
-            for(var i = 0; i < steps; i++) toggles[i] = 0;
-            var voice = SequencerVoice(id, buffer, name, toggles);
-            voices.push(voice);
         }
     }
 }
@@ -235,19 +241,23 @@ var sampleBank = SampleBank(engine.ctx);
 var files = [{
         path : './static/media/sound/Alesis_HR16A_03.wav',
         name : 'Kick 1',
-        toggles : [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0]
+        toggles : [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+        enabled : true
     }, {
         path: './static/media/sound/808_HH__CL.wav',
         name : 'Hi-hat',
-        toggles : [1,0,1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]
+        toggles : [1,0,1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+        enabled : true
     }, {
         path : './static/media/sound/Alesis_HR16A_48.wav',
         name : 'Snare',
-        toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], 
+        enabled : true
     }, {
         path : './static/media/sound/Clap 01 - Low.wav',
         name : 'Clap', 
-        toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        enabled : false
     }
 ]
 
@@ -256,6 +266,7 @@ function onSampleLoadSuccess(sample) {
     loadCount++;
     sequencer.addVoice(sample.buffer, sample.name);
     sequencer.enableVoiceAtSteps(sample.id, files[sample.id].toggles);
+    sequencer.enableVoice(sample.id, files[sample.id].enabled);
 
     if(loadCount >= files.length) {
         engine.connect(sequencer);
