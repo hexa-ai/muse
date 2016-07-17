@@ -105,7 +105,7 @@ function SequencerSource(id, startPosition, source) {
             return index >= source.length;
         }
     }
-}
+} 
 
 function SequencerVoice(id, buffer, name, toggles) {
     return {
@@ -165,7 +165,6 @@ function StepSequencer() {
                             if(voice.enabled && currentStep < voice.toggles.length) {
                                 if(voice.toggles[currentStep]) {
                                     var source = SequencerSource(sourceId, startSampleIndex + i, voice.buffer);
-                                    //sources.push(source);
                                     sources[sourceId] = source;
                                     sourceId++;
                                 }
@@ -234,50 +233,3 @@ function AudioEngine() {
         }
     };
 }
-
-var engine = AudioEngine();
-var sequencer = StepSequencer();
-var sampleBank = SampleBank(engine.ctx);
-var files = [{
-        path : './static/media/sound/Alesis_HR16A_03.wav',
-        name : 'Kick 1',
-        toggles : [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
-        enabled : true
-    }, {
-        path: './static/media/sound/808_HH__CL.wav',
-        name : 'Hi-hat',
-        toggles : [1,0,1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
-        enabled : true
-    }, {
-        path : './static/media/sound/Alesis_HR16A_48.wav',
-        name : 'Snare',
-        toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], 
-        enabled : true
-    }, {
-        path : './static/media/sound/Clap 01 - Low.wav',
-        name : 'Clap', 
-        toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        enabled : false
-    }
-]
-
-var loadCount = 0;
-function onSampleLoadSuccess(sample) {
-    loadCount++;
-    sequencer.addVoice(sample.buffer, sample.name);
-    sequencer.enableVoiceAtSteps(sample.id, files[sample.id].toggles);
-    sequencer.enableVoice(sample.id, files[sample.id].enabled);
-
-    if(loadCount >= files.length) {
-        engine.connect(sequencer);
-    } else {
-        var file = files[loadCount];
-        sampleBank.load(file.path, file.name, onSampleLoadSuccess);
-    }
-}
-
-function onSampleLoadError(error) {
-    console.error(error);
-} 
-
-sampleBank.load(files[0].path, files[0].name, onSampleLoadSuccess, onSampleLoadError);
