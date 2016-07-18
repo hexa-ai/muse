@@ -10,10 +10,11 @@
             });
 
             setInterval(function() {
-                socket.emit('in', data);
+                socket.emit('in', 'data here');
             }, 2000);
 
             socket.on('out', function(data) {
+
             });
 
             // Create the audio engine, sequencer and sample bank
