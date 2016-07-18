@@ -51,6 +51,7 @@
             var loadCount = 0;
             function onSampleLoadSuccess(sample) {
                 loadCount++;
+                sequencer.setTempo(60);
                 sequencer.addVoice(sample.buffer, sample.name);
                 sequencer.enableVoiceAtSteps(sample.id, files[sample.id].toggles);
                 sequencer.enableVoice(sample.id, files[sample.id].enabled);
@@ -82,10 +83,22 @@
             
             // Start loading the files
             sampleBank.load(files[0].path, files[0].name, onSampleLoadSuccess, onSampleLoadError);
+
+            window.onload = function() {
+                function updateInfo() {
+                    requestAnimationFrame(updateInfo);
+                    var div = document.getElementById('info');
+                    div.innerHTML = "Current Time: " + 
+                        parseFloat(engine.getCurrentTime()).toFixed(2) + 
+                        "<br/>Tempo: " + sequencer.getTempo();
+                }
+                updateInfo();
+            }
         </script>
     </head>
     <body>
         <h1>Muse</h1><h2>by HEXA</h2><p>Please contact your local bot</p>
         <input type="button" id="play-stop-btn" value="Play"></input>
+        <div id="info">Info here</div>
     </body>
 </html>

@@ -99,6 +99,11 @@ function StepSequencer() {
                 voices[id].toggles[step] = enable ? 1 : 0;
             }
         },
+        enableVoice : function(id, enable) {
+            if(voices[id]) {
+                voices[id].enabled = enable;
+            }
+        },
         enableVoiceAtSteps : function(id, values) {
             if(id < voices.length && voices[id]) {
                 for(var i = 0; i < values.length; i++) {
@@ -108,10 +113,11 @@ function StepSequencer() {
                 } 
             }    
         },
-        enableVoice : function(id, enable) {
-            if(voices[id]) {
-                voices[id].enabled = enable;
-            }
+        getSteps : function() {
+            return steps;
+        },
+        getTempo : function() {
+            return tempo;
         },
         process : function(outputBuffer, cycle) {
             // check the current step and add sources if we are on a 16th note
@@ -154,8 +160,7 @@ function StepSequencer() {
         },
         setTempo : function (newTempo) { 
             tempo = Math.min(Math.max(1, newTempo), 480)
-        }, 
-        
+        }
     }
 }
 
