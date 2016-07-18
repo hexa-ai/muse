@@ -2,121 +2,51 @@ var PI_2 = Math.PI * 2.0;
 var BUFFER_SIZE = 8192;
 var SAMPLE_RATE = 44100;
 
-function Drone(Hz) {
+// The main audio engine
+// Our wrapper around the WebAudio API
+function AudioEngine() {
+    var cycle = 0;
     var nodes = [];
-    var phase = 0;
-    var freq = Hz || 110.0 + Math.random() * 440.0;
-    var freqInc = freq / SAMPLE_RATE;
-    return {
-        process: function(channels, cycle) {
-            for(var i = 0; i < channels.length; i++) {
-                var output = channels[i];
-                for(var j = 0; j < output.length; j++) {
-                    phase += freqInc;
-                    output[j] += Math.sin(phase * PI_2) * 0.025;
-                    output[j] += Math.sin(phase * .75 * PI_2) * 0.025;
-                    output[j] += Math.sin(phase * .65 * Math.PI) * 0.025;
-                    output[j] = output[j] > 1.0 ? 0.999 : output[j];
-                }
+    var currentTime = 0;
+    var ctx = new AudioContext();   
+    var gain = ctx.createGain();
+    var processor = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
+    processor.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.value = 0.4;
+    processor.onaudioprocess = function(event) {
+        for(var i = 0; i < event.outputBuffer.numberOfChannels; i++) {
+            var output = event.outputBuffer.getChannelData(i);
+            for(var j = 0; j < output.length; j++) output[j] = 0;
+        }
+        
+        if(event.outputBuffer.numberOfChannels > 0) {            
+            for(var i = 0; i < nodes.length; i++) {
+                nodes[i].process(event.outputBuffer, cycle);
             }
+        }
+        
+        cycle += 1;
+        currentTime = (cycle * BUFFER_SIZE) / SAMPLE_RATE;
+    };
 
-            for(var node in nodes) {
-                nodes[node].process(channels, cycle);
-            }
+    return {
+        ctx : ctx,
+        processor : processor,
+        gain : gain,
+        getCurrentTime : function() { 
+            return currentTime; 
         },
-        connect: function(node) {
-           nodes.push(node);
-           return this;
-        }
-    }
-}
-
-function Tremelo() {
-    var freq = 3.5;
-    var phase = 0.0;
-    var freqInc = freq / SAMPLE_RATE;
-    return {
-        process : function(channels, cycle) {
-            for(var i = 0; i < channels.length; i++) {
-                var output = channels[i];
-                for(var j = 0; j < output.length; j++) {
-                    phase += freqInc;
-                    output[j] *= Math.abs(Math.sin(phase * PI_2));
-                }
-            }     
-        }
-    }
-}
-
-function SampleBank(ctx) {
-    var samples = [];
-    return {
-        samples : samples,
-        // TODO: Handle all possible error cases
-        load : function(url, name, success, error) {
-            var req = new XMLHttpRequest();
-            req.open('GET', url, true);
-            req.responseType = 'arraybuffer';
-            req.onload = function() {
-                ctx.decodeAudioData(req.response, function(buffer) {
-                    var id = samples.length;
-                    samples.push({
-                        id : id,
-                        buffer : buffer,
-                        name : name
-                    })
-                    if(success) success(samples[id]);
-                }, error);
-            }
-            req.send();
-        }
-    }
-}
-
-// TODO: Currently a sequencer source is only capable of playing back samples from an audio buffer
-// Would be cool if this object represented a more generic sound source so that it could 
-// provide audio data from a custom algorithmic source
-function SequencerSource(id, startPosition, buffer) {
-    var id = id;
-    var index = 0;
-    var buffer = buffer; 
-    var start = startPosition; 
-
-    return {
-        id : id,
-        process : function(outputBuffer, cycle) {
-            var indexStart = index;
-            var sampleStartIndex = BUFFER_SIZE * cycle;
-            for(var i = 0; i < outputBuffer.numberOfChannels; i++) {
-                var input = buffer.getChannelData(i);
-                var output = outputBuffer.getChannelData(i);
-                index = indexStart;
-                for(var j = 0; j < BUFFER_SIZE; j++) {
-                    if(sampleStartIndex + j >= start) {
-                        if(index < buffer.length) {
-                            output[j] += input[index]
-                            index++;
-                        }
-                    }
-                }
-            }
+        connect : function(node) {
+            nodes.push(node);
         },
-        isComplete : function() {
-            return index >= buffer.length;
+        shutdown : function() {
+            ctx.close();
         }
-    }
-} 
-
-function SequencerVoice(id, buffer, name, toggles) {
-    return {
-        buffer : buffer,
-        enabled : true,
-        id : id,
-        name : name, 
-        toggles : toggles
-    }
+    };
 }
 
+// An (n) step, sequencer capable of playing sample accurate audio
 function StepSequencer() {
     var tempo = 80.0;
     var steps = 32;
@@ -192,44 +122,129 @@ function StepSequencer() {
     }
 }
 
-function AudioEngine() {
-    var cycle = 0;
-    var nodes = [];
-    var currentTime = 0;
-    var ctx = new AudioContext();   
-    var gain = ctx.createGain();
-    var processor = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
-    processor.connect(gain);
-    gain.connect(ctx.destination);
-    gain.gain.value = 0.4;
-    processor.onaudioprocess = function(event) {
-        for(var i = 0; i < event.outputBuffer.numberOfChannels; i++) {
-            var output = event.outputBuffer.getChannelData(i);
-            for(var j = 0; j < output.length; j++) output[j] = 0;
-        }
-        
-        if(event.outputBuffer.numberOfChannels > 0) {            
-            for(var i = 0; i < nodes.length; i++) {
-                nodes[i].process(event.outputBuffer, cycle);
+// Container for loaded audio files
+function SampleBank(ctx) {
+    var samples = [];
+    return {
+        samples : samples,
+        // TODO: Handle all possible error cases
+        load : function(url, name, success, error) {
+            var req = new XMLHttpRequest();
+            req.open('GET', url, true);
+            req.responseType = 'arraybuffer';
+            req.onload = function() {
+                ctx.decodeAudioData(req.response, function(buffer) {
+                    var id = samples.length;
+                    samples.push({
+                        id : id,
+                        buffer : buffer,
+                        name : name
+                    })
+                    if(success) success(samples[id]);
+                }, error);
             }
+            req.send();
         }
-        
-        cycle += 1;
-        currentTime = (cycle * BUFFER_SIZE) / SAMPLE_RATE;
-    };
+    }
+}
+
+// An object used breifly as a playhead over a buffer
+// These objects are created on the fly and destroyed as soon as their playback is complete
+// TODO: Currently a sequencer source is only capable of playing back samples from an audio buffer
+// Would be cool if this object represented a more generic sound source so that it could 
+// provide audio data from a custom algorithmic source
+function SequencerSource(id, startPosition, buffer) {
+    var id = id;
+    var index = 0;
+    var buffer = buffer; 
+    var start = startPosition; 
 
     return {
-        ctx : ctx,
-        processor : processor,
-        gain : gain,
-        getCurrentTime : function() { 
-            return currentTime; 
+        id : id,
+        process : function(outputBuffer, cycle) {
+            var indexStart = index;
+            var sampleStartIndex = BUFFER_SIZE * cycle;
+            for(var i = 0; i < outputBuffer.numberOfChannels; i++) {
+                var input = buffer.getChannelData(i);
+                var output = outputBuffer.getChannelData(i);
+                index = indexStart;
+                for(var j = 0; j < BUFFER_SIZE; j++) {
+                    if(sampleStartIndex + j >= start) {
+                        if(index < buffer.length) {
+                            output[j] += input[index]
+                            index++;
+                        }
+                    }
+                }
+            }
         },
-        connect : function(node) {
-            nodes.push(node);
-        },
-        shutdown : function() {
-            ctx.close();
+        isComplete : function() {
+            return index >= buffer.length;
         }
-    };
+    }
+} 
+
+// Represents a row in the step sequencer 
+function SequencerVoice(id, buffer, name, toggles) {
+    return {
+        buffer : buffer,
+        enabled : true,
+        id : id,
+        name : name, 
+        toggles : toggles
+    }
 }
+
+// Test class, creates droning oscillations
+function Drone(Hz) {
+    var nodes = [];
+    var phase = 0;
+    var freq = Hz || 110.0 + Math.random() * 440.0;
+    var freqInc = freq / SAMPLE_RATE;
+    return {
+        process: function(channels, cycle) {
+            for(var i = 0; i < channels.length; i++) {
+                var output = channels[i];
+                for(var j = 0; j < output.length; j++) {
+                    phase += freqInc;
+                    output[j] += Math.sin(phase * PI_2) * 0.025;
+                    output[j] += Math.sin(phase * .75 * PI_2) * 0.025;
+                    output[j] += Math.sin(phase * .65 * Math.PI) * 0.025;
+                    output[j] = output[j] > 1.0 ? 0.999 : output[j];
+                }
+            }
+
+            for(var node in nodes) {
+                nodes[node].process(channels, cycle);
+            }
+        },
+        connect: function(node) {
+           nodes.push(node);
+           return this;
+        }
+    }
+}
+
+// Test class can be used as trem effect on drone
+function Tremelo() {
+    var freq = 3.5;
+    var phase = 0.0;
+    var freqInc = freq / SAMPLE_RATE;
+    return {
+        process : function(channels, cycle) {
+            for(var i = 0; i < channels.length; i++) {
+                var output = channels[i];
+                for(var j = 0; j < output.length; j++) {
+                    phase += freqInc;
+                    output[j] *= Math.abs(Math.sin(phase * PI_2));
+                }
+            }     
+        }
+    }
+}
+
+
+
+
+
+
