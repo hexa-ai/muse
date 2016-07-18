@@ -76,10 +76,10 @@ function SampleBank(ctx) {
 // TODO: Currently a sequencer source is only capable of playing back samples from an audio buffer
 // Would be cool if this object represented a more generic sound source so that it could 
 // provide audio data from a custom algorithmic source
-function SequencerSource(id, startPosition, source) {
+function SequencerSource(id, startPosition, buffer) {
     var id = id;
     var index = 0;
-    var source = source; 
+    var buffer = buffer; 
     var start = startPosition; 
 
     return {
@@ -88,13 +88,13 @@ function SequencerSource(id, startPosition, source) {
             var indexStart = index;
             var sampleStartIndex = BUFFER_SIZE * cycle;
             for(var i = 0; i < outputBuffer.numberOfChannels; i++) {
-                var buffer = source.getChannelData(i);
-                var channel = outputBuffer.getChannelData(i);
+                var input = buffer.getChannelData(i);
+                var output = outputBuffer.getChannelData(i);
                 index = indexStart;
                 for(var j = 0; j < BUFFER_SIZE; j++) {
                     if(sampleStartIndex + j >= start) {
-                        if(index < source.length) {
-                            channel[j] += buffer[index]
+                        if(index < buffer.length) {
+                            output[j] += input[index]
                             index++;
                         }
                     }
@@ -102,7 +102,7 @@ function SequencerSource(id, startPosition, source) {
             }
         },
         isComplete : function() {
-            return index >= source.length;
+            return index >= buffer.length;
         }
     }
 } 
