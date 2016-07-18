@@ -5,17 +5,18 @@
         <script type='text/javascript' charset='utf-8'>
             var socket = io.connect('http://' + document.domain + ':' + location.port);
             socket.on('connect', function() {
-                console.log('connected');
                 //socket.emit('my event', {data: 'I\'m connected!'});
             });
 
+            /**
             setInterval(function() {
                 socket.emit('in', 'data here');
             }, 2000);
 
             socket.on('out', function(data) {
-
+            
             });
+            **/
 
             // Create the audio engine, sequencer and sample bank
             var engine = AudioEngine();
@@ -56,6 +57,19 @@
 
                 if(loadCount >= files.length) {
                     engine.connect(sequencer);
+                    var btn = document.getElementById("play-stop-btn");
+                    btn.addEventListener("click", function(event) {
+                        switch(engine.getState()) {
+                            case 'started':
+                                engine.stop();
+                                btn.value = 'Play';
+                            break;
+                            case 'stopped':
+                                engine.start();
+                                btn.value = 'Stop';
+                            break;
+                        }
+                    });
                 } else {
                     var file = files[loadCount];
                     sampleBank.load(file.path, file.name, onSampleLoadSuccess);
@@ -72,5 +86,6 @@
     </head>
     <body>
         <h1>Muse</h1><h2>by HEXA</h2><p>Please contact your local bot</p>
+        <input type="button" id="play-stop-btn" value="Play"></input>
     </body>
 </html>

@@ -1,5 +1,5 @@
 var PI_2 = Math.PI * 2.0;
-var BUFFER_SIZE = 8192;
+var BUFFER_SIZE = 1024;
 var SAMPLE_RATE = 44100;
 
 // The main audio engine
@@ -8,11 +8,11 @@ function AudioEngine() {
     var cycle = 0;
     var nodes = [];
     var currentTime = 0;
+    var state = 'stopped';
     var ctx = new AudioContext();   
     var gain = ctx.createGain();
     var processor = ctx.createScriptProcessor(BUFFER_SIZE, 1, 1);
     processor.connect(gain);
-    gain.connect(ctx.destination);
     gain.gain.value = 0.4;
     processor.onaudioprocess = function(event) {
         for(var i = 0; i < event.outputBuffer.numberOfChannels; i++) {
@@ -37,11 +37,43 @@ function AudioEngine() {
         getCurrentTime : function() { 
             return currentTime; 
         },
+        getState : function() {
+            return state;
+        },
         connect : function(node) {
             nodes.push(node);
         },
+        pause : function() {
+            switch(state) {
+                case "started":
+                    state = "paused";
+                    gain.disconnect(ctx.destination);
+                    break;
+            }
+        }, 
         shutdown : function() {
             ctx.close();
+        }, 
+        start : function() {
+            switch(state) {
+                case 'stopped':
+                case 'paused':
+                    state = 'started';
+                    gain.connect(ctx.destination);
+                break;
+            }
+        },
+        stop : function() {
+            switch(state) {
+                case 'started':
+                case 'paused':
+                    cycle = 0;
+                    currentTime = 0;
+                    state = 'stopped';
+                    gain.disconnect(ctx.destination);
+                    for(var i in nodes) { nodes[i].reset() }
+                break;
+            }
         }
     };
 }
@@ -112,13 +144,18 @@ function StepSequencer() {
                 }
             }
         }, 
+        reset : function() {
+            step = 0;
+            sourceId = 0;
+            for(var i in sources) delete sources[i]; 
+        },
         setSteps : function(newSteps) {
             steps = newSteps;
-            // resize the toggle arrays
         },
         setTempo : function (newTempo) { 
             tempo = Math.min(Math.max(1, newTempo), 480)
-        }
+        }, 
+        
     }
 }
 
