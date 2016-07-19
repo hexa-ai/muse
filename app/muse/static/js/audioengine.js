@@ -33,7 +33,9 @@ function AudioEngine() {
     return {
         ctx : ctx,
         processor : processor,
-        gain : gain,
+        getAmplitude : function() {
+            return gain.gain.value;
+        },
         getCurrentTime : function() { 
             return currentTime; 
         },
@@ -51,6 +53,9 @@ function AudioEngine() {
                     break;
             }
         }, 
+        setAmplitude : function(value) {
+            gain.gain.value = Math.min(Math.max(0, value), 1.0);
+        },
         shutdown : function() {
             ctx.close();
         }, 
@@ -159,7 +164,7 @@ function StepSequencer() {
             steps = newSteps;
         },
         setTempo : function (newTempo) { 
-            tempo = Math.min(Math.max(1, newTempo), 480)
+            tempo = Math.min(Math.max(30, newTempo), 480)
         }
     }
 }
