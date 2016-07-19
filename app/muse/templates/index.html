@@ -27,7 +27,7 @@
             var files = [{
                     path : './static/media/sound/Alesis_HR16A_03.wav',
                     name : 'Kick 1',
-                    toggles : [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+                    toggles : [1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0],
                     enabled : true
                 }, {
                     path: './static/media/sound/808_HH__CL.wav',
@@ -37,13 +37,13 @@
                 }, {
                     path : './static/media/sound/Alesis_HR16A_48.wav',
                     name : 'Snare',
-                    toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], 
+                    toggles : [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], 
                     enabled : true
                 }, {
                     path : './static/media/sound/Clap 01 - Low.wav',
                     name : 'Clap', 
-                    toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    enabled : false
+                    toggles : [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+                    enabled : true
                 }
             ]
 
@@ -51,7 +51,7 @@
             var loadCount = 0;
             function onSampleLoadSuccess(sample) {
                 loadCount++;
-                sequencer.setTempo(60);
+                sequencer.setTempo(120);
                 sequencer.addVoice(sample.buffer, sample.name);
                 sequencer.enableVoiceAtSteps(sample.id, files[sample.id].toggles);
                 sequencer.enableVoice(sample.id, files[sample.id].enabled);
