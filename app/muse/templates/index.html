@@ -51,12 +51,15 @@
             var loadCount = 0;
             function onSampleLoadSuccess(sample) {
                 loadCount++;
-                sequencer.setTempo(120);
+                
                 sequencer.addVoice(sample.buffer, sample.name);
                 sequencer.enableVoiceAtSteps(sample.id, files[sample.id].toggles);
                 sequencer.enableVoice(sample.id, files[sample.id].enabled);
-
+                
                 if(loadCount >= files.length) {
+                    updateInfo();
+                    sequencer.setTempo(120);
+                    sequencer.setSteps(32);
                     engine.connect(sequencer);
                     var btn = document.getElementById("play-stop-btn");
                     btn.addEventListener("click", function(event) {
@@ -84,19 +87,19 @@
             // Start loading the files
             sampleBank.load(files[0].path, files[0].name, onSampleLoadSuccess, onSampleLoadError);
 
-            window.onload = function() {
-                function updateInfo() {
-                    requestAnimationFrame(updateInfo);
-                    var div = document.getElementById('info');
-                    var t = engine.getCurrentTime();
-                    
-                    div.innerHTML = "Current Time: " + 
-                        parseFloat(t).toFixed(2) + 
-                        "<br/>Tempo: " + sequencer.getTempo() + 
-                        "<br/>" + (1 + Math.floor((t * sequencer.getTempo() / 60.0) % 4)) +
-                        ":" + (1 + Math.floor((t * sequencer.getTempo() / 4 / 60.0)));
-                }
-                updateInfo();
+            function updateInfo() {
+                requestAnimationFrame(updateInfo);
+                var div = document.getElementById('info');
+                var t = engine.getCurrentTime();
+                var beatDuration = t * sequencer.getTempo(); 
+                var quaterNote = (1 + Math.floor((beatDuration / 60.0) % 4));
+                var measure = (1 + Math.floor((beatDuration / 4 / 60.0)));
+                var step = (1 + Math.floor((beatDuration / 60 * 4)  % sequencer.getSteps()));
+                div.innerHTML = "Current Time: " + 
+                    parseFloat(t).toFixed(2) + 
+                    "<br/>Tempo: " + sequencer.getTempo() + 
+                    "<br/>Steps: " + sequencer.getSteps() +
+                    "<br/>" + quaterNote +":" +  measure + ":" + step;
             }
         </script>
     </head>
