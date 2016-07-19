@@ -96,6 +96,13 @@
                             toggle.type = "checkbox";
                             toggle.checked = file.toggles[j];
                             toggleDiv.appendChild(toggle);
+                            toggle.voice_id = file.id;
+                            toggle.index = j;
+                            toggle.addEventListener('change', function(event) {
+                                var toggle = event.target;
+                                sequencer.enableVoiceAtStep(
+                                    toggle.voice_id, toggle.index, toggle.checked);
+                            });
                         }
                         label.innerHTML = file.name;
                         container.appendChild(label);
