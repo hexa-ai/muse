@@ -25,24 +25,24 @@
 
             // Define a data structure to load the data and initialize audio playback from
             var files = [{
-                    path : './static/media/sound/Alesis_HR16A_03.wav',
+                    path : './static/media/sound/Kick05-Longer.wav',
                     name : 'Kick 1',
-                    toggles : [1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,1,0,0,0,0],
+                    toggles : [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
                     enabled : true
                 }, {
-                    path: './static/media/sound/808_HH__CL.wav',
+                    path: './static/media/sound/CH.WAV',
                     name : 'Hi-hat',
-                    toggles : [1,0,1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+                    toggles : [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
                     enabled : true
                 }, {
-                    path : './static/media/sound/Alesis_HR16A_48.wav',
+                    path : './static/media/sound/Snare04-Hi-Simmons1.wav',
                     name : 'Snare',
                     toggles : [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], 
                     enabled : true
                 }, {
-                    path : './static/media/sound/Clap 01 - Low.wav',
+                    path : './static/media/sound/CP.WAV',
                     name : 'Clap', 
-                    toggles : [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+                    toggles : [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,1,1,1],
                     enabled : true
                 }
             ]
@@ -51,14 +51,14 @@
             var loadCount = 0;
             function onSampleLoadSuccess(sample) {
                 loadCount++;
-                
+                files[sample.id].id = sample.id; 
                 sequencer.addVoice(sample.buffer, sample.name);
                 sequencer.enableVoiceAtSteps(sample.id, files[sample.id].toggles);
                 sequencer.enableVoice(sample.id, files[sample.id].enabled);
                 
                 if(loadCount >= files.length) {
                     updateInfo();
-                    sequencer.setTempo(120);
+                    sequencer.setTempo(94);
                     sequencer.setSteps(32);
                     engine.connect(sequencer);
                     var btn = document.getElementById("play-stop-btn");
@@ -84,6 +84,25 @@
                     volumeSlider.addEventListener("input", function(event) {
                         engine.setAmplitude(volumeSlider.value);
                     });
+
+                    var sequencerDiv = document.getElementById("sequencer");
+                    for(var i in files) {
+                        var file = files[i];
+                        var container = document.createElement("div");
+                        var label = document.createElement("p");
+                        var toggleDiv = document.createElement("div");
+                        for(var j in file.toggles) {
+                            var toggle = document.createElement("input");
+                            toggle.type = "checkbox";
+                            toggle.checked = file.toggles[j];
+                            toggleDiv.appendChild(toggle);
+                        }
+                        label.innerHTML = file.name;
+                        container.appendChild(label);
+                        container.appendChild(toggleDiv);
+                        sequencerDiv.appendChild(container);
+
+                    }
                 } else {
                     var file = files[loadCount];
                     sampleBank.load(file.path, file.name, onSampleLoadSuccess);
@@ -116,8 +135,9 @@
     <body>
         <h1>Muse</h1><h2>by HEXA</h2><p>Please contact your local bot</p>
         <input type="button" id="play-stop-btn" value="Play"></input>
-        <p>Tempo: <input type="range" id="tempo-slider" value="120" min="30" max="480"></p>
+        <p>Tempo: <input type="range" id="tempo-slider" value="120" step="1" min="45" max="270"></p>
         <p>Volume: <input type="range" id="volume-slider" step="0.01" value="0.5" min="0.0" max="0.8"></p>
         <div id="info">Info here</div>
+        <div id="sequencer"></div>
     </body>
 </html>
