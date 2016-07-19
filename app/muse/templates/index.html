@@ -88,9 +88,13 @@
                 function updateInfo() {
                     requestAnimationFrame(updateInfo);
                     var div = document.getElementById('info');
+                    var t = engine.getCurrentTime();
+                    
                     div.innerHTML = "Current Time: " + 
-                        parseFloat(engine.getCurrentTime()).toFixed(2) + 
-                        "<br/>Tempo: " + sequencer.getTempo();
+                        parseFloat(t).toFixed(2) + 
+                        "<br/>Tempo: " + sequencer.getTempo() + 
+                        "<br/>" + (1 + Math.floor((t * sequencer.getTempo() / 60.0) % 4)) +
+                        ":" + (1 + Math.floor((t * sequencer.getTempo() / 4 / 60.0)));
                 }
                 updateInfo();
             }
