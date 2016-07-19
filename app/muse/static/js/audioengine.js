@@ -121,7 +121,7 @@ function StepSequencer() {
         },
         process : function(outputBuffer, cycle) {
             // check the current step and add sources if we are on a 16th note
-            var stepInterval = Math.round(SAMPLE_RATE * 60.0 / tempo / 16);
+            var stepInterval = Math.round(SAMPLE_RATE * 60.0 / tempo / 4);
             if(outputBuffer.numberOfChannels) {
                 var bufferSize = outputBuffer.getChannelData(0).length;
                 var startSampleIndex = bufferSize * cycle;
