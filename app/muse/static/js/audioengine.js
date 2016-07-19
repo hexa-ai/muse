@@ -26,8 +26,8 @@ function AudioEngine() {
             }
         }
         
-        cycle += 1;
         currentTime = (cycle * BUFFER_SIZE) / SAMPLE_RATE;
+        cycle += 1;
     };
 
     return {
