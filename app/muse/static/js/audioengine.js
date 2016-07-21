@@ -88,19 +88,19 @@ function StepSequencer() {
     var tempo = 80.0;
     var steps = 32;
     var step = 0;
-    var voices = [];
+    var voices = {};
+    var voiceId = 0;
     var sourceId = 0;
     var sources = {};
     return {
         addVoice : function(buffer, name) {
             var toggles = [];
-            var id = voices.length;
             for(var i = 0; i < steps; i++) toggles[i] = 0;
-            var voice = SequencerVoice(id, buffer, name, toggles);
-            voices.push(voice);
+            voices[voiceId] = SequencerVoice(voiceId, buffer, name, toggles);
+            voiceId++;
         },
         enableVoiceAtStep : function(id, step, enable) {
-            if(id < voices.length && voices[id]) {
+            if(voices[id]) {
                 voices[id].toggles[step] = enable ? 1 : 0;
             }
         },
@@ -110,7 +110,7 @@ function StepSequencer() {
             }
         },
         enableVoiceAtSteps : function(id, values) {
-            if(id < voices.length && voices[id]) {
+            if(voices[id]) {
                 for(var i = 0; i < values.length; i++) {
                     if(i <= voices[id].toggles.length) {
                         voices[id].toggles[i] = values[i];
@@ -133,7 +133,7 @@ function StepSequencer() {
                 for(var i = 0; i < bufferSize; i++) {
                     if((startSampleIndex + i) % stepInterval == 0) {
                         var currentStep = step++ % steps;
-                        for(var j = 0; j < voices.length; j++) {
+                        for(var j in voices) {
                             var voice = voices[j];
                             if(voice.enabled && currentStep < voice.toggles.length) {
                                 if(voice.toggles[currentStep]) {
