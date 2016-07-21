@@ -23,6 +23,9 @@
             var sequencer = StepSequencer();
             var sampleBank = SampleBank(engine.ctx);
 
+            // Store checkboxes in a 2D array
+            var checkboxes = [];
+
             // Define a data structure to load the data and initialize audio playback from
             var files = [{
                     path : './static/media/sound/Kick05-Longer.wav',
@@ -88,6 +91,7 @@
                     var sequencerDiv = document.getElementById("sequencer");
                     for(var i in files) {
                         var file = files[i];
+                        checkboxes.push([]);
                         var container = document.createElement("div");
                         var label = document.createElement("p");
                         var toggleDiv = document.createElement("div");
@@ -98,6 +102,7 @@
                             toggleDiv.appendChild(toggle);
                             toggle.voice_id = file.id;
                             toggle.index = j;
+                            checkboxes[i].push(toggle);
                             toggle.addEventListener('change', function(event) {
                                 var toggle = event.target;
                                 sequencer.enableVoiceAtStep(
@@ -108,7 +113,6 @@
                         container.appendChild(label);
                         container.appendChild(toggleDiv);
                         sequencerDiv.appendChild(container);
-
                     }
                 } else {
                     var file = files[loadCount];
@@ -136,6 +140,12 @@
                     "<br/>Tempo: " + sequencer.getTempo() + 
                     "<br/>Steps: " + sequencer.getSteps() +
                     "<br/>" + quaterNote +":" +  measure + ":" + step;
+                for(var i = 0; i< checkboxes.length; i++) {
+                    for(var j = 0; j < checkboxes[i].length; j++) {
+                        checkboxes[i][j].style.boxShadow = 
+                            (j == step-1) ? "0px 1px 0px blue" : "0px 0px 0px";
+                    } 
+                }
             }
         </script>
     </head>
