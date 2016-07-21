@@ -95,8 +95,7 @@ function StepSequencer() {
     return {
         addVoice : function(buffer, name) {
             var toggles = [];
-            for(var i = 0; i < steps; i++) toggles[i] = 0;
-            voices[voiceId] = SequencerVoice(voiceId, buffer, name, toggles);
+            voices[voiceId] = SequencerVoice(voiceId, buffer, name, steps);
             voiceId++;
         },
         enableVoiceAtStep : function(id, step, enable) {
@@ -232,7 +231,8 @@ function SequencerSource(id, startPosition, buffer) {
 } 
 
 // Represents a row in the step sequencer 
-function SequencerVoice(id, buffer, name, toggles) {
+function SequencerVoice(id, buffer, name, steps) {
+    var toggles = [].fill.call({ length: steps }, 0); 
     return {
         buffer : buffer,
         enabled : true,
