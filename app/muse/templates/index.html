@@ -3,21 +3,6 @@
         <script src='https://cdn.socket.io/socket.io-1.4.5.js'></script>
         <script type='text/javascript' src='./static/js/audioengine.js'></script>
         <script type='text/javascript' charset='utf-8'>
-            var socket = io.connect('http://' + document.domain + ':' + location.port);
-            socket.on('connect', function() {
-                //socket.emit('my event', {data: 'I\'m connected!'});
-            });
-
-            /**
-            setInterval(function() {
-                socket.emit('in', 'data here');
-            }, 2000);
-
-            socket.on('out', function(data) {
-            
-            });
-            **/
-
             // Create the audio engine, sequencer and sample bank
             var engine = AudioEngine();
             var sequencer = StepSequencer();
@@ -88,6 +73,8 @@
                         engine.setAmplitude(volumeSlider.value);
                     });
 
+                    
+
                     var sequencerDiv = document.getElementById("sequencer");
                     for(var i in files) {
                         var file = files[i];
@@ -95,6 +82,11 @@
                         var container = document.createElement("div");
                         var label = document.createElement("p");
                         var toggleDiv = document.createElement("div");
+                        label.innerHTML = file.name;
+                        container.appendChild(label);
+                        container.appendChild(toggleDiv);
+                        sequencerDiv.appendChild(container);
+
                         for(var j in file.toggles) {
                             var toggle = document.createElement("input");
                             toggle.type = "checkbox";
@@ -109,11 +101,13 @@
                                     toggle.voice_id, toggle.index, toggle.checked);
                             });
                         }
-                        label.innerHTML = file.name;
-                        container.appendChild(label);
-                        container.appendChild(toggleDiv);
-                        sequencerDiv.appendChild(container);
                     }
+
+                    var socket = io.connect('http://' + document.domain + ':' + location.port);
+                    socket.on('connect', function() {
+                        console.log('Connected');
+                        socket.emit('connect', {data : 'I connected'});
+                    });
                 } else {
                     var file = files[loadCount];
                     sampleBank.load(file.path, file.name, onSampleLoadSuccess);

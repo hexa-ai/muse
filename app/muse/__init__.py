@@ -15,12 +15,9 @@ def handle_connect():
 def handle_disconnect():
     pass
 
-@socketio.on('in')
-def handle_message(json):
-    for i in range(len(json)):
-        for x in range(len(json[i])):
-            json[i][x] = 1 if random() > 0.5 else 0
-    socketio.emit('out', json)
+@socketio.on('sequence')
+def handle_message(data):
+    print(data)
 
 @app.route('/')
 def index():

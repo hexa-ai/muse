@@ -123,6 +123,9 @@ function StepSequencer() {
         getTempo : function() {
             return tempo;
         },
+        getVoices : function() {
+            return voices;
+        },
         process : function(outputBuffer, cycle) {
             // check the current step and add sources if we are on a 16th note
             var stepInterval = Math.round(SAMPLE_RATE * 60.0 / tempo / 4);
