@@ -1,5 +1,5 @@
 var PI_2 = Math.PI * 2.0;
-var BUFFER_SIZE = 1024;
+var BUFFER_SIZE = 256;
 var SAMPLE_RATE = 44100;
 
 // The main audio engine
@@ -116,6 +116,9 @@ function StepSequencer() {
                     }
                 } 
             }    
+        },
+        getCurrentStep : function() {
+            return step;
         },
         getSteps : function() {
             return steps;
