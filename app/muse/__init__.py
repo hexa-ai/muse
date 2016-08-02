@@ -2,10 +2,16 @@ from random import random
 from flask import Flask, request
 from flask import render_template
 from flask_socketio import SocketIO
+from muse.models import db
 
 app = Flask(__name__)
 app.config.from_object('config')
+
 socketio = SocketIO(app, async_mode="eventlet")
+
+db.init_app(app)
+with app.app_context():
+    db.create_all()
 
 @socketio.on('connect')
 def handle_connect():
