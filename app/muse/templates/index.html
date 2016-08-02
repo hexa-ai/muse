@@ -14,7 +14,7 @@
             // Define a data structure to load the data and initialize audio playback from
             var files = [{
                     path : './static/media/sound/Kick05-Longer.wav',
-                    name : 'Kick 1',
+                    name : 'Kick',
                     toggles : [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
                     enabled : true
                 }, {
@@ -49,6 +49,12 @@
                     sequencer.setTempo(94);
                     sequencer.setSteps(32);
                     engine.connect(sequencer);
+
+                    var socket = io.connect('http://' + document.domain + ':' + location.port);
+                    socket.on('connect', function() {
+                        console.log('Connected');
+                    });
+
                     var btn = document.getElementById("play-stop-btn");
                     btn.addEventListener("click", function(event) {
                         switch(engine.getState()) {
@@ -71,6 +77,11 @@
                     var volumeSlider = document.getElementById("volume-slider");
                     volumeSlider.addEventListener("input", function(event) {
                         engine.setAmplitude(volumeSlider.value);
+                    });
+
+                    var saveButton = document.getElementById('save-btn');
+                    saveButton.addEventListener('click', function(event) {
+                        socket.emit('save_sequence', JSON.stringify(sequencer.getVoices()))
                     });
 
                     var sequencerDiv = document.getElementById("sequencer");
@@ -101,11 +112,7 @@
                         }
                     }
 
-                    var socket = io.connect('http://' + document.domain + ':' + location.port);
-                    socket.on('connect', function() {
-                        console.log('Connected');
-                        //socket.emit('connect', {data : 'I connected'});
-                    });
+                    
                 } else {
                     var file = files[loadCount];
                     sampleBank.load(file.path, file.name, onSampleLoadSuccess);
@@ -149,5 +156,6 @@
         <p>Volume: <input type="range" id="volume-slider" step="0.01" value="0.5" min="0.0" max="0.8"></p>
         <div id="info">Info here</div>
         <div id="sequencer"></div>
+        <input id='save-btn' type='button' value='Save'></input>
     </body>
 </html>
