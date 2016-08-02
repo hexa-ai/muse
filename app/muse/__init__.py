@@ -25,6 +25,10 @@ def handle_disconnect():
 def handle_message(data):
     print(data)
 
+@socketio.on('save_sequence')
+def handle_save_sequence(data):
+    print(data)
+
 @app.route('/')
 def index():
     return render_template('index.html')
