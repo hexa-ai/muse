@@ -19,6 +19,7 @@ dependencies:
 - pip:
   - eventlet==0.19.0
   - flask-socketio==2.5
+  - flask-sqlalchemy
   - greenlet==0.4.10
   - python-engineio==0.9.2
   - python-socketio==1.4.1
