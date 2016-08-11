@@ -1,8 +1,8 @@
-from random import random
+import json
 from flask import Flask, request
 from flask import render_template
 from flask_socketio import SocketIO
-from muse.models import db
+from muse.models import db, Sequence
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -23,11 +23,13 @@ def handle_disconnect():
 
 @socketio.on('sequence')
 def handle_message(data):
-    print(data)
+    pass 
 
 @socketio.on('save_sequence')
 def handle_save_sequence(data):
-    print(data)
+    seq = Sequence(json.loads(data))
+    db.session.add(seq)
+    db.session.commit()
 
 @app.route('/')
 def index():

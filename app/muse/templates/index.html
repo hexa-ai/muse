@@ -81,7 +81,23 @@
 
                     var saveButton = document.getElementById('save-btn');
                     saveButton.addEventListener('click', function(event) {
-                        socket.emit('save_sequence', JSON.stringify(sequencer.getVoices()))
+                        var voices = sequencer.getVoices();
+                        console.log(voices);
+                        var toggleData = "";
+                        for(var i in voices) {
+                            var toggles = voices[i]['toggles']
+                            if(toggles) {
+                                for(var j in toggles) {
+                                    toggleData += toggles[j];
+                                }
+                            }
+                        }
+                        var sequence = {
+                            instrument : 'beatbox',
+                            shape : [files.length, sequencer.getSteps()],
+                            data : toggleData
+                        }
+                        socket.emit('save_sequence', JSON.stringify(sequence))
                     });
 
                     var sequencerDiv = document.getElementById("sequencer");
@@ -111,8 +127,6 @@
                             });
                         }
                     }
-
-                    
                 } else {
                     var file = files[loadCount];
                     sampleBank.load(file.path, file.name, onSampleLoadSuccess);
