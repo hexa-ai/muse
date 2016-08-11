@@ -238,7 +238,7 @@ function SequencerSource(id, startPosition, buffer) {
 
 // Represents a row in the step sequencer 
 function SequencerVoice(id, buffer, name, steps) {
-    var toggles = [].fill.call({ length: steps }, 0); 
+    var toggles = Array(steps).fill(0); 
     return {
         buffer : buffer,
         enabled : true,
