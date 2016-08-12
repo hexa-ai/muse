@@ -31,6 +31,12 @@ def handle_save_sequence(data):
     db.session.add(seq)
     db.session.commit()
 
+@socketio.on('get_sequences')
+def handle_get_sequences():
+    sequences = Sequence.query.all()
+    for sequence in sequences:
+        print(sequence)
+
 @app.route('/')
 def index():
     return render_template('index.html')
