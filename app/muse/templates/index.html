@@ -55,6 +55,10 @@
                         console.log('Connected');
                     });
 
+                    socket.on('message', function(message) {
+                        console.log(message);
+                    });
+
                     var btn = document.getElementById("play-stop-btn");
                     btn.addEventListener("click", function(event) {
                         switch(engine.getState()) {
