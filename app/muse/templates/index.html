@@ -4,6 +4,7 @@
         <script type='text/javascript' src='./static/js/audioengine.js'></script>
         <script type='text/javascript' charset='utf-8'>
             // Create the audio engine, sequencer and sample bank
+            var compositionId = -1;
             var engine = AudioEngine();
             var sequencer = StepSequencer();
             var sampleBank = SampleBank(engine.ctx);
@@ -57,6 +58,11 @@
 
                     socket.on('message', function(message) {
                         console.log(message);
+                    });
+
+                    socket.on('composition_init', function(data) {
+                        compositionId = data['composition_id']; 
+                        console.log(compositionId);
                     });
 
                     var btn = document.getElementById("play-stop-btn");

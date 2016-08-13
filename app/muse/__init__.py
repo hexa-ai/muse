@@ -2,7 +2,7 @@ import json
 from flask import Flask, request
 from flask import render_template
 from flask_socketio import SocketIO, send, emit
-from muse.models import db, Sequence
+from muse.models import *
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -24,7 +24,10 @@ with app.app_context():
 def handle_connect():
     # using send() sends a message back to a single client
     # use socketio.send() to send to all clients
-    send('init_composition')
+    composition = Composition()
+    db.session.add(composition)
+    db.session.commit()
+    emit('composition_init', {'composition_id' : composition.id})
 
 @socketio.on('save_sequence')
 def handle_save_sequence(data):
