@@ -57,5 +57,9 @@ def handle_sequence_update(data):
 def index():
     return render_template('index.html')
 
+@app.route('/index2')
+def index2():
+    return render_template('index_2.html')
+
 if __name__ == '__main__':
     socketio.run(app, debug=app.config['DEBUG'])
