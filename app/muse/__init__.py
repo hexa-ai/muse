@@ -7,33 +7,42 @@ from muse.models import *
 app = Flask(__name__)
 app.config.from_object('config')
 socketio = SocketIO(app, async_mode="eventlet")
-
 db.init_app(app)
-with app.app_context():
-    meta = db.metadata
-    '''
-    # clear the database
-    for table in reversed(meta.sorted_tables):
-        print('Clear table %s' % table)
-        db.session.execute(table.delete())
-    db.session.commit()
-    '''
-    db.create_all()
 
 @socketio.on('connect')
 def handle_connect():
     # using send() sends a message back to a single client
     # use socketio.send() to send to all clients
+    # create a new composition for this session
     composition = Composition()
     db.session.add(composition)
     db.session.commit()
+
+    # emit a message containing this sessions composition id
     emit('composition_init', {'composition_id' : composition.id})
 
-@socketio.on('save_sequence')
-def handle_save_sequence(data):
-    seq = Sequence(json.loads(data))
-    db.session.add(seq)
-    db.session.commit()
+@socketio.on('save_composition')
+def handle_save_composition(data):
+    d = json.loads(data)
+    if 'composition_id' in d:
+        print(d['composition_id'])
+        composition = Composition.query.filter_by(id=d['composition_id']).first()
+        
+        if composition is not None:
+            if 'sequences' in d:
+                for sequence in d['sequences']:
+                    instrument = sequence['instrument']
+                    shape = sequence['shape']
+                    toggles = sequence['toggles']
+                    for seq in composition.sequences:
+                        print(seq)
+                    '''
+                    if composition.contains_instrument(instrument):
+                        # update the existing sequence
+                        print('Updating existing instrument')
+                    else:
+                        print('Creating new instrument')
+                    '''
 
 @socketio.on('get_sequences')
 def handle_get_sequences():
