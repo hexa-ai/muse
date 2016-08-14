@@ -92,7 +92,6 @@
                     var saveButton = document.getElementById('save-btn');
                     saveButton.addEventListener('click', function(event) {
                         var voices = sequencer.getVoices();
-                        console.log(voices);
                         var toggleData = "";
                         for(var i in voices) {
                             var toggles = voices[i]['toggles']
@@ -102,12 +101,18 @@
                                 }
                             }
                         }
-                        var sequence = {
-                            instrument : 'beatbox',
-                            shape : [files.length, sequencer.getSteps()],
-                            data : toggleData
+
+                        var composition = {
+                            composition_id : compositionId,
+                            sequences : [{
+                                    instrument : 'beatbox',
+                                    shape : [files.length, sequencer.getSteps()],
+                                    toggles : toggleData
+                                }
+                            ]
                         }
-                        socket.emit('save_sequence', JSON.stringify(sequence))
+                        
+                        socket.emit('save_composition', JSON.stringify(composition))
                     });
 
                     var getButton = document.getElementById('get-btn');
