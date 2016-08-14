@@ -27,22 +27,21 @@ def handle_save_composition(data):
     if 'composition_id' in d:
         print(d['composition_id'])
         composition = Composition.query.filter_by(id=d['composition_id']).first()
-        
         if composition is not None:
             if 'sequences' in d:
                 for sequence in d['sequences']:
                     instrument = sequence['instrument']
                     shape = sequence['shape']
                     toggles = sequence['toggles']
-                    for seq in composition.sequences:
-                        print(seq)
-                    '''
-                    if composition.contains_instrument(instrument):
-                        # update the existing sequence
-                        print('Updating existing instrument')
-                    else:
-                        print('Creating new instrument')
-                    '''
+                    has_seq = False
+                    for seq in composition.sequences.all():
+                        if seq.instrument == instrument:
+                            has_seq = True
+                            print('Sequence for {} exists'.format(instrument))
+                    if not has_seq:
+                        print('Creating new sequence')
+                        db.session.add(Sequence(shape[0], shape[1], toggles, instrument, composition))
+                        db.session.commit()
 
 @socketio.on('get_sequences')
 def handle_get_sequences():
