@@ -126,7 +126,16 @@ function StepSequencer() {
         getTempo : function() {
             return tempo;
         },
-        getVoices : function() {
+        getVoices : function(voiceNames) {
+            if(voiceNames) {
+                var result = {}
+                for(var name in voiceNames) {
+                    if(voices[name]) {
+                        result[name] = voices[name];
+                    }
+                }
+                return result;
+            }
             return voices;
         },
         process : function(outputBuffer, cycle) {
