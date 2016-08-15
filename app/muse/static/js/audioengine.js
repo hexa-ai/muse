@@ -188,12 +188,12 @@ function SampleBank(ctx) {
     var samples = [];
     return {
         samples : samples,
-        // TODO: Handle all possible error cases
         load : function(url, name, success, error) {
             var req = new XMLHttpRequest();
             req.open('GET', url, true);
             req.responseType = 'arraybuffer';
-            req.onload = function() {
+            req.addEventListener('load', function(event) {
+                console.log(event);
                 ctx.decodeAudioData(req.response, function(buffer) {
                     var id = samples.length;
                     samples.push({
@@ -201,9 +201,14 @@ function SampleBank(ctx) {
                         buffer : buffer,
                         name : name
                     })
-                    if(success) success(samples[id]);
+                    if(success) success(event);
                 }, error);
-            }
+            });
+
+            req.addEventListener('error', function(event) {
+                if(error) error(event);
+            });
+
             req.send();
         }, 
         loadAll : function(files, success, error) {
