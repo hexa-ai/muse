@@ -1,28 +1,13 @@
 import os
 import os.path
 import config
-from muse import app, db
+from muse import app, mongo
 
-cmd = input('Enter a command -> create | clear | destroy: ')
+cmd = input('Enter a command -> seed-instruments: ')
 
-if cmd == 'create':
+if cmd == 'seed-instruments':
     with app.app_context():
-        print('Creating database')
-        db.create_all()
-
-if cmd == 'clear':
-    with app.app_context():
-        print('Clearing database')
-        meta = db.metadata
-        for table in reversed(meta.sorted_tables):
-            print('Clearing table %s' % table)
-            db.session.execute(table.delete())
-        db.session.commit()
-
-if cmd == 'destroy':
-    print('Destroying database file')
-    if os.path.exists(config.DATABASE_FILENAME):
-        os.remove(config.DATABASE_FILENAME)
-        print('Database file removed')
-        
-    
+        instruments = ['beats', 'bass', 'synth']
+        mongo.db.instruments.remove()
+        for instrument in instruments:
+            mongo.db.instruments.insert_one({'type' : instrument})
