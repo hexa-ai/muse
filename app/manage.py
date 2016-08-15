@@ -3,7 +3,7 @@ import os.path
 import config
 from muse import app, mongo
 
-cmd = input('Enter a command -> seed-instruments | clear-collections: ')
+cmd = input('Enter a command -> seed-instruments | clear-collections | delete-collections: ')
 
 if cmd == 'seed-instruments':
     with app.app_context():
@@ -26,3 +26,13 @@ if cmd == 'seed-instruments':
                 }
             ]
         }])
+
+if cmd == 'clear-collections':
+    with app.app_context():
+        for collection in mongo.db.collection_names():
+            mongo.db.get_collection(collection).remove()
+
+if cmd == 'delete-collections':
+    with app.app_context():
+        for collection in mongo.db.collection_names():
+            mongo.db.get_collection(collection).drop()
