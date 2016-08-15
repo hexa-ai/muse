@@ -2,7 +2,7 @@ import json
 from flask import Flask, request
 from flask import render_template
 from flask_socketio import SocketIO, send, emit
-from flask.ext.pymongo import PyMongo, ObjectId
+from flask_pymongo import PyMongo, ObjectId
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -38,9 +38,11 @@ def handle_get_sequences():
     pass
 
 @socketio.on('request_new_sequence')
-def handle_get_new_sequence():
-    sequence_id = str(mongo.db.sequences.insert_one({}).insert_id)
-    emit('response_new_sequence', {'sequence_id' : sequence_id })
+def handle_get_new_sequence(data):
+    if 'instrument' in data:
+        instrument = db.instruments.find_one(data['instrument'])
+        sequence_id = str(mongo.db.sequences.insert_one({}).insert_id)
+        emit('response_new_sequence', {'sequence_id' : sequence_id })
 
 @socketio.on('sequence_update')
 def handle_sequence_update(data):
