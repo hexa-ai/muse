@@ -1,13 +1,20 @@
 import json
+from bson.json_util import dumps
 from flask import Flask, request
 from flask import render_template
 from flask_socketio import SocketIO, send, emit
 from flask_pymongo import PyMongo, ObjectId
 
+# ----------------------------------------------------------------   
+# Setup and Config
+
 app = Flask(__name__)
 app.config.from_object('config')
 socketio = SocketIO(app, async_mode="eventlet")
 mongo = PyMongo(app)
+
+# ----------------------------------------------------------------   
+# WebSocket Handlers
 
 @socketio.on('connect')
 def handle_connect():
@@ -28,25 +35,21 @@ def handle_save_composition(data):
                 for sequence in d['sequences']:
                     pass
                       
-@socketio.on('get_sequences')
-def handle_get_sequences():
-    '''
-    sequences = Sequence.query.all()
-    for sequence in sequences:
-        print(sequence)
-    '''
-    pass
+@socketio.on('request_instrument_list')
+def handle_request_instrument_list():
+    instruments = mongo.db.instruments.find({}, {'name' : 1})
+    socketio.emit('response_instrument_list', dumps(instruments))
 
 @socketio.on('request_new_sequence')
-def handle_get_new_sequence(data):
+def handle_request_new_sequence(data):
     if 'instrument' in data:
-        instrument = db.instruments.find_one(data['instrument'])
-        sequence_id = str(mongo.db.sequences.insert_one({}).insert_id)
-        emit('response_new_sequence', {'sequence_id' : sequence_id })
+        instrument = mongo.db.instruments.find_one({'type' : data['instrument']})
+        if instrument is not None:
+            sequence = mongo.db.sequences.insert_one({'instrument' : instrument['type']})
+            emit('response_new_sequence', {'sequence' : sequence })
 
-@socketio.on('sequence_update')
-def handle_sequence_update(data):
-    pass
+# ----------------------------------------------------------------   
+# Page Routing Handlers
 
 @app.route('/')
 def index():
