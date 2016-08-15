@@ -50,7 +50,7 @@
                     sequencer.setTempo(94);
                     sequencer.setSteps(32);
                     engine.connect(sequencer);
-
+                    
                     var socket = io.connect('http://' + document.domain + ':' + location.port);
                     socket.on('connect', function() {
                         console.log('Connected');
