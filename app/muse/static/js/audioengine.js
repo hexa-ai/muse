@@ -193,7 +193,6 @@ function SampleBank(ctx) {
             req.open('GET', url, true);
             req.responseType = 'arraybuffer';
             req.addEventListener('load', function(event) {
-                console.log(event);
                 ctx.decodeAudioData(req.response, function(buffer) {
                     var id = samples.length;
                     samples.push({

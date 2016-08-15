@@ -1,5 +1,5 @@
 import json
-from bson.json_util import dumps
+from bson.json_util import dumps, loads
 from flask import Flask, request
 from flask import render_template
 from flask_socketio import SocketIO, send, emit
@@ -42,18 +42,26 @@ def handle_request_instrument_list():
 
 @socketio.on('request_new_sequence')
 def handle_request_new_sequence(data):
+    print(data)
     if 'instrument' in data:
-        instrument = mongo.db.instruments.find_one({'type' : data['instrument']})
+        instrument_id = ObjectId(data['instrument'])
+        print(instrument_id)
+        instrument = mongo.db.instruments.find_one({'_id' : instrument_id})
+        print(instrument)
+        '''
         if instrument is not None:
             sequence = mongo.db.sequences.insert_one({'instrument' : instrument['type']})
+            print(sequence)
             emit('response_new_sequence', {'sequence' : sequence })
+        '''
 
 # ----------------------------------------------------------------   
 # Page Routing Handlers
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    instruments = mongo.db.instruments.find({}, {'name' : 1})
+    return render_template('index.html', instruments=loads(dumps(instruments)))
 
 @app.route('/index2')
 def index2():

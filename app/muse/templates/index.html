@@ -3,39 +3,84 @@
         <script src='https://cdn.socket.io/socket.io-1.4.5.js'></script>
         <script type='text/javascript' src='./static/js/audioengine.js'></script>
         <script type='text/javascript' charset='utf-8'>
-            // Create the audio engine, sequencer and sample bank
-            var compositionId = -1;
+            // ---------------------------------------------------------------- 
+            // Setup the Audio Engine
             var engine = AudioEngine();
             var sequencer = StepSequencer();
-            var sampleBank = SampleBank(engine.ctx);
 
-            // Store checkboxes in a 2D array
-            var checkboxes = [];
+            // ---------------------------------------------------------------- 
+            // SocketIO Handlers
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+            socket.on('connect', function() {
+                console.log('Connected');
+            });
+
+            socket.on('error', function() {
+                console.log('error');
+            });
+
+            socket.on('message', function(message) {
+                console.log(message);
+            });
+
+            socket.on('composition_init', function(data) {
+                compositionId = data['composition_id']; 
+                console.log(compositionId);
+            });
+
+            socket.on('response_new_sequence', function(data) {
+                console.log('response_new_sequence')
+            });
+
+            // ---------------------------------------------------------------- 
+            // UI Handlers
+            window.onload = function() {
+                var instrumentSelect = document.getElementById('instrument-select');
+                var createInstrumentButton = document.getElementById('create-instrument-btn');
+
+                createInstrumentButton.addEventListener('click', function(event) {
+                    socket.emit('request_new_sequence', {'instrument' : instrumentSelect.value})
+                });
+            }
+            
 
             // Define a data structure to load the data and initialize audio playback from
             var files = [{
-                    path : './static/media/sound/Kick05-Longer.wav',
+                    file : './static/media/sound/Kick05-Longer.wav',
                     name : 'Kick',
                     toggles : [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
                     enabled : true
                 }, {
-                    path: './static/media/sound/CH.WAV',
+                    file: './static/media/sound/CH.WAV',
                     name : 'Hi-hat',
                     toggles : [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
                     enabled : true
                 }, {
-                    path : './static/media/sound/Snare04-Hi-Simmons1.wav',
+                    file : './static/media/sound/Snare04-Hi-Simmons1.wav',
                     name : 'Snare',
                     toggles : [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], 
                     enabled : true
                 }, {
-                    path : './static/media/sound/CP.WAV',
+                    file : './static/media/sound/CP.WAV',
                     name : 'Clap',
                     toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                     enabled : true
                 }
             ]
 
+            /*
+            sampleBank.loadAll(files, onSampleLoadComplete, onSampleLoadError);
+
+            function onSampleLoadComplete() {
+                console.log('onSampleLoadComplete');
+            }
+
+            function onSampleLoadError() {
+                console.log('onSampleLoadError');
+            }
+            */
+
+            /*
             // Set up handlers for load success and error
             var loadCount = 0;
             function onSampleLoadSuccess(sample) {
@@ -51,29 +96,7 @@
                     sequencer.setSteps(32);
                     engine.connect(sequencer);
                     
-                    var socket = io.connect('http://' + document.domain + ':' + location.port);
-                    socket.on('connect', function() {
-                        console.log('Connected');
-                    });
-
-                    socket.on('message', function(message) {
-                        console.log(message);
-                    });
-
-                    socket.on('composition_init', function(data) {
-                        compositionId = data['composition_id']; 
-                        console.log(compositionId);
-                    });
-
-                    socket.on('response_new_sequence', function(data) {
-                        console.log('response_new_sequence')
-                    });
-
-                    socket.on('response_instrument_list', function(data) {
-                        console.log(data);
-                    });
-
-                    socket.emit('request_instrument_list');
+                    
 
                     var btn = document.getElementById("play-stop-btn");
                     btn.addEventListener("click", function(event) {
@@ -191,6 +214,7 @@
                     } 
                 } 
             }
+            */
         </script>
     </head>
     <body>
@@ -200,7 +224,14 @@
         <p>Volume: <input type="range" id="volume-slider" step="0.01" value="0.5" min="0.0" max="0.8"></p>
         <div id="info">Info here</div>
         <div id="sequencer"></div>
-        <input id='save-btn' type='button' value='Save'></input>
-        <input id='get-btn' type='button' value='Get'></input>
+        <div>
+            <h3>Create New Instrument</h3>
+            <select id='instrument-select'>
+                {% for instrument in instruments %}
+                <option text="{{ instrument['name'] }}" value="{{ instrument['_id'] }}">{{ instrument['name'] }}</option>
+                {% endfor %}
+            </select>
+            <input id='create-instrument-btn' type='button' value='Create'></input>
+        </div>
     </body>
 </html>
