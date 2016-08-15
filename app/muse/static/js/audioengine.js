@@ -205,6 +205,19 @@ function SampleBank(ctx) {
                 }, error);
             }
             req.send();
+        }, 
+        loadAll : function(files, success, error) {
+            var count = 0;
+            var self = this;
+            function next() {
+                if(count < files.length - 1) {
+                    self.load(files[count].file, files[count].name, next, error);
+                    count++;
+                } else {
+                    if(success) success();
+                }
+            }
+            next();
         }
     }
 }
