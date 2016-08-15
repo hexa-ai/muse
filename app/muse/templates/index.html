@@ -65,6 +65,16 @@
                         console.log(compositionId);
                     });
 
+                    socket.on('response_new_sequence', function(data) {
+                        console.log('response_new_sequence')
+                    });
+
+                    socket.on('response_instrument_list', function(data) {
+                        console.log(data);
+                    });
+
+                    socket.emit('request_instrument_list');
+
                     var btn = document.getElementById("play-stop-btn");
                     btn.addEventListener("click", function(event) {
                         switch(engine.getState()) {
@@ -117,7 +127,7 @@
 
                     var getButton = document.getElementById('get-btn');
                     getButton.addEventListener('click', function(event) {
-                        socket.emit('get_sequences');
+                        socket.emit('request_new_sequence', {'instrument' : 'beats'});
                     });
 
                     var sequencerDiv = document.getElementById("sequencer");
