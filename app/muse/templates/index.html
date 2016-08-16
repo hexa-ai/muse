@@ -29,7 +29,7 @@
             });
 
             socket.on('response_new_sequence', function(data) {
-                console.log('response_new_sequence')
+                console.log(data)
             });
 
             // ---------------------------------------------------------------- 
@@ -39,10 +39,12 @@
                 var createInstrumentButton = document.getElementById('create-instrument-btn');
 
                 createInstrumentButton.addEventListener('click', function(event) {
-                    socket.emit('request_new_sequence', {'instrument' : instrumentSelect.value})
+                    socket.emit('request_new_sequence', {
+                        'composition_id' : compositionId, 
+                        'instrument' : instrumentSelect.value
+                    });
                 });
             }
-            
 
             // Define a data structure to load the data and initialize audio playback from
             var files = [{

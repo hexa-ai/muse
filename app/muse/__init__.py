@@ -42,18 +42,24 @@ def handle_request_instrument_list():
 
 @socketio.on('request_new_sequence')
 def handle_request_new_sequence(data):
-    print(data)
-    if 'instrument' in data:
+    if 'instrument' in data and 'composition_id' in data:
         instrument_id = ObjectId(data['instrument'])
-        print(instrument_id)
+        composition_id = data['composition_id']
         instrument = mongo.db.instruments.find_one({'_id' : instrument_id})
-        print(instrument)
-        '''
+
         if instrument is not None:
-            sequence = mongo.db.sequences.insert_one({'instrument' : instrument['type']})
-            print(sequence)
-            emit('response_new_sequence', {'sequence' : sequence })
-        '''
+            sequence_id = str(mongo.db.sequences.insert_one({}).inserted_id)
+            print(sequence_id)
+            print(instrument['voices'])
+            result = {
+                'composition_id' : composition_id,
+                'instrument_id' : str(instrument_id),
+                'sequence_id' : sequence_id,
+                'voices' : instrument['voices'],
+                'steps' : 32, 
+                'tempo' : 120
+            }
+            emit('response_new_sequence', result)
 
 # ----------------------------------------------------------------   
 # Page Routing Handlers
