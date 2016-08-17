@@ -55,9 +55,9 @@ def handle_request_new_sequence(data):
                 'steps' : 32, 
                 'tempo' : 120
             }
-            sequence_id = str(mongo.db.sequences.insert_one(result).inserted_id)
-            result['_id'] = sequence_id
-            emit('response_new_sequence', result)
+            sequence_id = mongo.db.sequences.insert_one(result).inserted_id
+            sequence = mongo.db.sequences.find_one(sequence_id)
+            emit('response_new_sequence', dumps(sequence))
 
 # ----------------------------------------------------------------   
 # Page Routing Handlers
