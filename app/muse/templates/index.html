@@ -7,7 +7,8 @@
             // Setup the Audio Engine
             var engine = AudioEngine();
             var sequencer = StepSequencer();
-
+            var voiceSets = [];
+            
             // ---------------------------------------------------------------- 
             // SocketIO Handlers
             var socket = io.connect('http://' + document.domain + ':' + location.port);
@@ -29,7 +30,20 @@
             });
 
             socket.on('response_new_sequence', function(data) {
-                console.log(data)
+                var voices = data['voices'];
+                voiceSets.add(voices);
+                if(voices) {
+                    var sampleBank = new SampleBank(engine.ctx);
+                    sampleBank.loadAll(voices, 
+                        function(event) {
+                            var samples = sampleBank.samples;
+                            for(var sample in samples) {
+                                sequencer.addVoice(sample, samples[sample]);
+                            }
+                        }, function(event) {
+                            console.log('Error'); 
+                        });
+                }
             });
 
             // ---------------------------------------------------------------- 
@@ -46,42 +60,6 @@
                 });
             }
 
-            // Define a data structure to load the data and initialize audio playback from
-            var files = [{
-                    file : './static/media/sound/Kick05-Longer.wav',
-                    name : 'Kick',
-                    toggles : [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    enabled : true
-                }, {
-                    file: './static/media/sound/CH.WAV',
-                    name : 'Hi-hat',
-                    toggles : [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                    enabled : true
-                }, {
-                    file : './static/media/sound/Snare04-Hi-Simmons1.wav',
-                    name : 'Snare',
-                    toggles : [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], 
-                    enabled : true
-                }, {
-                    file : './static/media/sound/CP.WAV',
-                    name : 'Clap',
-                    toggles : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                    enabled : true
-                }
-            ]
-
-            /*
-            sampleBank.loadAll(files, onSampleLoadComplete, onSampleLoadError);
-
-            function onSampleLoadComplete() {
-                console.log('onSampleLoadComplete');
-            }
-
-            function onSampleLoadError() {
-                console.log('onSampleLoadError');
-            }
-            */
-
             /*
             // Set up handlers for load success and error
             var loadCount = 0;
@@ -97,8 +75,6 @@
                     sequencer.setTempo(94);
                     sequencer.setSteps(32);
                     engine.connect(sequencer);
-                    
-                    
 
                     var btn = document.getElementById("play-stop-btn");
                     btn.addEventListener("click", function(event) {

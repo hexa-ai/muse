@@ -23,7 +23,8 @@ def handle_connect():
     # create a new composition for this session
     new_composition = {
             'tempo' : 120,
-            'steps' : 32
+            'steps' : 32,
+            'name' : 'Untitled'
         }
     composition_id = str(mongo.db.compositions.insert_one(new_composition).inserted_id)
     emit('composition_init', {'composition_id' : composition_id})
@@ -56,6 +57,7 @@ def handle_request_new_sequence(data):
                 'composition_id' : composition_id,
                 'instrument_id' : str(instrument_id),
                 'voices' : instrument['voices'],
+                'name' : 'Untitled'
             }
 
             sequence_id = mongo.db.sequences.insert_one(result).inserted_id

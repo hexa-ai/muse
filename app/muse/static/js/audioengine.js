@@ -185,7 +185,8 @@ function StepSequencer() {
 
 // Container for loaded audio files
 function SampleBank(ctx) {
-    var samples = [];
+    var samples = {};
+    var ctx = ctx;
     return {
         samples : samples,
         load : function(url, name, success, error) {
@@ -195,11 +196,7 @@ function SampleBank(ctx) {
             req.addEventListener('load', function(event) {
                 ctx.decodeAudioData(req.response, function(buffer) {
                     var id = samples.length;
-                    samples.push({
-                        id : id,
-                        buffer : buffer,
-                        name : name
-                    })
+                    samples[name] = buffer;
                     if(success) success(event);
                 }, error);
             });
@@ -214,7 +211,7 @@ function SampleBank(ctx) {
             var count = 0;
             var self = this;
             function next() {
-                if(count < files.length - 1) {
+                if(count < files.length) {
                     self.load(files[count].file, files[count].name, next, error);
                     count++;
                 } else {
