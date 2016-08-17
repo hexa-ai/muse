@@ -21,7 +21,11 @@ def handle_connect():
     # using send() sends a message back to a single client
     # use socketio.send() to send to all clients
     # create a new composition for this session
-    composition_id = str(mongo.db.compositions.insert_one({}).inserted_id)
+    new_composition = {
+            'tempo' : 120,
+            'steps' : 32
+        }
+    composition_id = str(mongo.db.compositions.insert_one(new_composition).inserted_id)
     emit('composition_init', {'composition_id' : composition_id})
 
 @socketio.on('save_composition')
@@ -52,12 +56,11 @@ def handle_request_new_sequence(data):
                 'composition_id' : composition_id,
                 'instrument_id' : str(instrument_id),
                 'voices' : instrument['voices'],
-                'steps' : 32, 
-                'tempo' : 120
             }
+
             sequence_id = mongo.db.sequences.insert_one(result).inserted_id
             sequence = mongo.db.sequences.find_one(sequence_id)
-            emit('response_new_sequence', dumps(sequence))
+            emit('response_new_sequence', json.loads(dumps(sequence)))
 
 # ----------------------------------------------------------------   
 # Page Routing Handlers
