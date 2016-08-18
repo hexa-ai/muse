@@ -2,12 +2,12 @@
     <head>
         <script src='https://cdn.socket.io/socket.io-1.4.5.js'></script>
         <script type='text/javascript' src='./static/js/audioengine.js'></script>
+        <script type='text/javascript' src='./static/js/sequencer-ui.js'></script>
         <script type='text/javascript' charset='utf-8'>
             // ---------------------------------------------------------------- 
             // Setup the Audio Engine
             var engine = AudioEngine();
             var sequencer = StepSequencer();
-            var voiceSets = [];
             
             // ---------------------------------------------------------------- 
             // SocketIO Handlers
@@ -26,25 +26,40 @@
 
             socket.on('composition_init', function(data) {
                 compositionId = data['composition_id']; 
-                console.log(compositionId);
             });
 
             socket.on('response_new_sequence', function(data) {
-                var voices = data['voices'];
-                voiceSets.add(voices);
-                if(voices) {
-                    var sampleBank = new SampleBank(engine.ctx);
-                    sampleBank.loadAll(voices, 
-                        function(event) {
-                            var samples = sampleBank.samples;
-                            for(var sample in samples) {
-                                sequencer.addVoice(sample, samples[sample]);
-                            }
-                        }, function(event) {
-                            console.log('Error'); 
-                        });
-                }
+                var sampleBank = new SampleBank(engine.ctx);
+                sampleBank.loadAll(data['voices'], 
+                    function success() {
+                        var voices = data['voices'];
+                        var sequenceId = data['_id']['$oid'];
+                        var sequenceName = data['name'];
+
+                        for (var voice in voices) {
+                            var voiceName = voices[voice]['name'];
+                            var voiceId = voiceName + '-' + sequenceId;
+                            voices[voice]['voiceId'] = voiceId;
+                            sequencer.addVoice(voiceId, voiceName, sampleBank.samples[voiceName])
+                        }
+                         
+                        var seqUI = new SequencerUI(
+                            document.getElementById('sequencer'), sequencer, sequenceName, voices);
+                    }, 
+                    function error() {
+                         
+                    }); 
             });
+
+            // ----------------------------------------------------------------  
+            // IO Event Handlers
+            function onSampleBufferLoadComplete(sampleBank) {
+                
+            }
+
+            function onSampleBufferLoadError(error) {
+                console.log(error);
+            }
 
             // ---------------------------------------------------------------- 
             // UI Handlers
@@ -58,141 +73,49 @@
                         'instrument' : instrumentSelect.value
                     });
                 });
-            }
 
-            /*
-            // Set up handlers for load success and error
-            var loadCount = 0;
-            function onSampleLoadSuccess(sample) {
-                loadCount++;
-                files[sample.id].id = sample.id; 
-                sequencer.addVoice(sample.buffer, sample.name);
-                sequencer.enableVoiceAtSteps(sample.id, files[sample.id].toggles);
-                sequencer.enableVoice(sample.id, files[sample.id].enabled);
-                
-                if(loadCount >= files.length) {
-                    updateInfo();
-                    sequencer.setTempo(94);
-                    sequencer.setSteps(32);
-                    engine.connect(sequencer);
+                engine.connect(sequencer);
 
-                    var btn = document.getElementById("play-stop-btn");
-                    btn.addEventListener("click", function(event) {
-                        switch(engine.getState()) {
-                            case 'started':
-                                engine.stop();
-                                btn.value = 'Play';
-                            break;
-                            case 'stopped':
-                                engine.start();
-                                btn.value = 'Stop';
-                            break;
-                        }
-                    });
-
-                    var tempoSlider = document.getElementById("tempo-slider");
-                    tempoSlider.addEventListener("input", function(event) {
-                        sequencer.setTempo(tempoSlider.value);
-                    });
-
-                    var volumeSlider = document.getElementById("volume-slider");
-                    volumeSlider.addEventListener("input", function(event) {
-                        engine.setAmplitude(volumeSlider.value);
-                    });
-
-                    var saveButton = document.getElementById('save-btn');
-                    saveButton.addEventListener('click', function(event) {
-                        var voices = sequencer.getVoices();
-                        var toggleData = "";
-                        for(var i in voices) {
-                            var toggles = voices[i]['toggles']
-                            if(toggles) {
-                                for(var j in toggles) {
-                                    toggleData += toggles[j];
-                                }
-                            }
-                        }
-
-                        var composition = {
-                            composition_id : compositionId,
-                            sequences : [{
-                                    instrument : 'beatbox',
-                                    shape : [files.length, sequencer.getSteps()],
-                                    toggles : toggleData
-                                }
-                            ]
-                        }
-                        
-                        socket.emit('save_composition', JSON.stringify(composition))
-                    });
-
-                    var getButton = document.getElementById('get-btn');
-                    getButton.addEventListener('click', function(event) {
-                        socket.emit('request_new_sequence', {'instrument' : 'beats'});
-                    });
-
-                    var sequencerDiv = document.getElementById("sequencer");
-                    for(var i in files) {
-                        var file = files[i];
-                        checkboxes.push([]);
-                        var container = document.createElement("div");
-                        var label = document.createElement("p");
-                        var toggleDiv = document.createElement("div");
-                        label.innerHTML = file.name;
-                        container.appendChild(label);
-                        container.appendChild(toggleDiv);
-                        sequencerDiv.appendChild(container);
-
-                        for(var j in file.toggles) {
-                            var toggle = document.createElement("input");
-                            toggle.type = "checkbox";
-                            toggle.checked = file.toggles[j];
-                            toggleDiv.appendChild(toggle);
-                            toggle.voice_id = file.id;
-                            toggle.index = j;
-                            checkboxes[i].push(toggle);
-                            toggle.addEventListener('change', function(event) {
-                                var toggle = event.target;
-                                sequencer.enableVoiceAtStep(
-                                    toggle.voice_id, toggle.index, toggle.checked);
-                            });
-                        }
+                var btn = document.getElementById("play-stop-btn");
+                btn.addEventListener("click", function(event) {
+                    switch(engine.getState()) {
+                        case 'started':
+                            engine.stop();
+                            btn.value = 'Play';
+                        break;
+                        case 'stopped':
+                            engine.start();
+                            btn.value = 'Stop';
+                        break;
                     }
-                } else {
-                    var file = files[loadCount];
-                    sampleBank.load(file.path, file.name, onSampleLoadSuccess);
+                });
+
+                var tempoSlider = document.getElementById("tempo-slider");
+                tempoSlider.addEventListener("input", function(event) {
+                    sequencer.setTempo(tempoSlider.value);
+                });
+
+                var volumeSlider = document.getElementById("volume-slider");
+                volumeSlider.addEventListener("input", function(event) {
+                    engine.setAmplitude(volumeSlider.value);
+                });
+
+                function updateInfo() {
+                    requestAnimationFrame(updateInfo);
+                    var t = engine.getCurrentTime();
+                    var currentStep = sequencer.getCurrentStep();
+                    var totalSteps = sequencer.getSteps();
+                    var div = document.getElementById('info');
+                    var quaterNote =  1 + Math.floor(currentStep / 4) % 4;
+                    var measure = 1 + Math.floor(currentStep / 16);
+                    div.innerHTML = "Current Time: " + 
+                        parseFloat(t).toFixed(2) + 
+                        "<br/>Tempo: " + sequencer.getTempo() + 
+                        "<br/>Steps: " + sequencer.getSteps() +
+                        "<br/>" + quaterNote +":" +  measure;
                 }
+                updateInfo();
             }
-
-            function onSampleLoadError(error) {
-                console.error(error);
-            } 
-            
-            // Start loading the files
-            sampleBank.load(files[0].path, files[0].name, onSampleLoadSuccess, onSampleLoadError);
-
-            function updateInfo() {
-                requestAnimationFrame(updateInfo);
-                var t = engine.getCurrentTime();
-                var currentStep = sequencer.getCurrentStep();
-                var totalSteps = sequencer.getSteps();
-                var div = document.getElementById('info');
-                var quaterNote =  1 + Math.floor(currentStep / 4) % 4;
-                var measure = 1 + Math.floor(currentStep / 16);
-                div.innerHTML = "Current Time: " + 
-                    parseFloat(t).toFixed(2) + 
-                    "<br/>Tempo: " + sequencer.getTempo() + 
-                    "<br/>Steps: " + sequencer.getSteps() +
-                    "<br/>" + quaterNote +":" +  measure;
-                
-                for(var i = 0; i< checkboxes.length; i++) {
-                    for(var j = 0; j < checkboxes[i].length; j++) {
-                        checkboxes[i][j].style.boxShadow = 
-                            (j == currentStep % totalSteps) ? "0px 1px 0px blue" : "0px 0px 0px";
-                    } 
-                } 
-            }
-            */
         </script>
     </head>
     <body>
@@ -201,9 +124,9 @@
         <p>Tempo: <input type="range" id="tempo-slider" value="120" step="1" min="45" max="270"></p>
         <p>Volume: <input type="range" id="volume-slider" step="0.01" value="0.5" min="0.0" max="0.8"></p>
         <div id="info">Info here</div>
-        <div id="sequencer"></div>
+
+        <h3>Create New Instrument</h3>
         <div>
-            <h3>Create New Instrument</h3>
             <select id='instrument-select'>
                 {% for instrument in instruments %}
                 <option text="{{ instrument['name'] }}" value="{{ instrument['_id'] }}">{{ instrument['name'] }}</option>
@@ -211,5 +134,6 @@
             </select>
             <input id='create-instrument-btn' type='button' value='Create'></input>
         </div>
+        <div id="sequencer"></div>
     </body>
 </html>

@@ -89,17 +89,18 @@ function StepSequencer() {
     var steps = 32;
     var step = 0;
     var voices = {};
-    var voiceId = 0;
     var sourceId = 0;
     var sources = {};
     return {
-        addVoice : function(buffer, name) {
+        addVoice : function(voiceId, name, buffer) {
             var toggles = [];
             voices[voiceId] = SequencerVoice(voiceId, buffer, name, steps);
-            voiceId++;
         },
         enableVoiceAtStep : function(id, step, enable) {
+            console.log(id);
+            console.log(voices);
             if(voices[id]) {
+                console.log('enabling voice[' + id + ']' + ' at step: ' + step);
                 voices[id].toggles[step] = enable ? 1 : 0;
             }
         },
@@ -215,7 +216,7 @@ function SampleBank(ctx) {
                     self.load(files[count].file, files[count].name, next, error);
                     count++;
                 } else {
-                    if(success) success();
+                    if(success) success(self);
                 }
             }
             next();
