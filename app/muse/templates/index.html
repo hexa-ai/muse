@@ -8,6 +8,7 @@
             // Setup the Audio Engine
             var engine = AudioEngine();
             var sequencer = StepSequencer();
+            var sequencerUIs = [];
             engine.connect(sequencer);
             
             // ---------------------------------------------------------------- 
@@ -36,8 +37,8 @@
                             sequencer.addVoice(voiceId, voiceName, sampleBank.samples[voiceName])
                         }
                          
-                        var seqUI = new SequencerUI(
-                            document.getElementById('sequencer'), sequencer, sequenceName, voices);
+                        sequencerUIs.push(new SequencerUI(
+                            document.getElementById('sequencer'), sequencer, sequenceName, voices));
                     }, 
                     function error() {
                         console.log('Error loading sample bank');                         
@@ -95,6 +96,10 @@
                         "<br/>Tempo: " + sequencer.getTempo() + 
                         "<br/>Steps: " + sequencer.getSteps() +
                         "<br/>" + quaterNote +":" +  measure;
+
+                    for(var i = 0; i < sequencerUIs.length; i++) {
+                        sequencerUIs[i].setStep(currentStep % totalSteps);
+                    }
                 }
                 updateInfo();
             }
