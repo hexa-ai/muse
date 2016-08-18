@@ -2,7 +2,6 @@ function SequencerUI(container, sequencer, sequenceName, voices) {
     var toggles = {};
     var div = document.createElement('div');
     container.appendChild(div);
-    console.log(voices);
     for(var voice in voices) {
         var voiceName = voices[voice]['name'];
         var voiceId = voices[voice]['voiceId'];

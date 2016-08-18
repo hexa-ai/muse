@@ -8,20 +8,13 @@
             // Setup the Audio Engine
             var engine = AudioEngine();
             var sequencer = StepSequencer();
+            engine.connect(sequencer);
             
             // ---------------------------------------------------------------- 
             // SocketIO Handlers
             var socket = io.connect('http://' + document.domain + ':' + location.port);
             socket.on('connect', function() {
                 console.log('Connected');
-            });
-
-            socket.on('error', function() {
-                console.log('error');
-            });
-
-            socket.on('message', function(message) {
-                console.log(message);
             });
 
             socket.on('composition_init', function(data) {
@@ -47,19 +40,9 @@
                             document.getElementById('sequencer'), sequencer, sequenceName, voices);
                     }, 
                     function error() {
-                         
+                        console.log('Error loading sample bank');                         
                     }); 
             });
-
-            // ----------------------------------------------------------------  
-            // IO Event Handlers
-            function onSampleBufferLoadComplete(sampleBank) {
-                
-            }
-
-            function onSampleBufferLoadError(error) {
-                console.log(error);
-            }
 
             // ---------------------------------------------------------------- 
             // UI Handlers
@@ -67,14 +50,13 @@
                 var instrumentSelect = document.getElementById('instrument-select');
                 var createInstrumentButton = document.getElementById('create-instrument-btn');
 
+
                 createInstrumentButton.addEventListener('click', function(event) {
                     socket.emit('request_new_sequence', {
                         'composition_id' : compositionId, 
                         'instrument' : instrumentSelect.value
                     });
                 });
-
-                engine.connect(sequencer);
 
                 var btn = document.getElementById("play-stop-btn");
                 btn.addEventListener("click", function(event) {

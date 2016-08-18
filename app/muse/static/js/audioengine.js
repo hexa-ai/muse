@@ -97,10 +97,7 @@ function StepSequencer() {
             voices[voiceId] = SequencerVoice(voiceId, buffer, name, steps);
         },
         enableVoiceAtStep : function(id, step, enable) {
-            console.log(id);
-            console.log(voices);
             if(voices[id]) {
-                console.log('enabling voice[' + id + ']' + ' at step: ' + step);
                 voices[id].toggles[step] = enable ? 1 : 0;
             }
         },
