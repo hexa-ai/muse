@@ -66,6 +66,47 @@ if cmd == 'seed-instruments':
                     'file' : './static/media/sound/sawbass/saw-bass-B.wav'
                 }
             ]
+        },{
+            'name' : 'synth-flute', 
+            'type' : 'flute', 
+            'voices' : [{
+                    'name' : 'C',
+                    'file' : './static/media/sound/synthflute/synth-flute-c.wav'
+                },{
+                    'name' : 'C#',
+                    'file' : './static/media/sound/synthflute/synth-flute-c-sharp.wav'
+                },{
+                    'name' : 'D',
+                    'file' : './static/media/sound/synthflute/synth-flute-d.wav'
+                },{
+                    'name' : 'D#',
+                    'file' : './static/media/sound/synthflute/synth-flute-d-sharp.wav'
+                },{
+                    'name' : 'E',
+                    'file' : './static/media/sound/synthflute/synth-flute-e.wav'
+                },{
+                    'name' : 'F',
+                    'file' : './static/media/sound/synthflute/synth-flute-f.wav'
+                },{
+                    'name' : 'F#',
+                    'file' : './static/media/sound/synthflute/synth-flute-f-sharp.wav'
+                },{
+                    'name' : 'G',
+                    'file' : './static/media/sound/synthflute/synth-flute-g.wav'
+                },{
+                    'name' : 'G#',
+                    'file' : './static/media/sound/synthflute/synth-flute-g-sharp.wav'
+                },{
+                    'name' : 'A',
+                    'file' : './static/media/sound/synthflute/synth-flute-a.wav'
+                },{
+                    'name' : 'A#',
+                    'file' : './static/media/sound/synthflute/synth-flute-a-sharp.wav'
+                },{
+                    'name' : 'B',
+                    'file' : './static/media/sound/synthflute/synth-flute-B.wav'
+                }
+            ]
         }
     ]) 
 

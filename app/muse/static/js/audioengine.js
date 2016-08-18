@@ -1,5 +1,5 @@
 var PI_2 = Math.PI * 2.0;
-var BUFFER_SIZE = 2048;
+var BUFFER_SIZE = 4096;
 var SAMPLE_RATE = 44100;
 
 // The main audio engine
