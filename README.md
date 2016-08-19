@@ -10,12 +10,21 @@ $ conda env create -f environment.yml
 $ source activate muse
 ```
 
-## Running
+## Set up the db
+Make sure mongodb is running!
+
+If this is the first time you're running the app, you'll need to seed the database with instruments.
+```
+$python app/manage.py
+Enter a command -> seed-instruments | clear-collections | delete-collections:
+seed-instruments
+```
+
+## Run it!
 ```
 $ cd app/
 $ python run.py
 ```
-You are now running the flask app in a debugging mode. Each time you make a change to the project, the server will be restarted automatically. 
-
+You are now running the flask app in a debugging mode. Each time you make a change to the project, the server will be restarted automatically. Point your browser to: http://127.0.0.1:5000
 
 
