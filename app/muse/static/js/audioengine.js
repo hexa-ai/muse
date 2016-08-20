@@ -128,6 +128,7 @@ function StepSequencer() {
             if(voiceNames) {
                 var result = {}
                 for(var name in voiceNames) {
+                    console.log(voices[name]);
                     if(voices[name]) {
                         result[name] = voices[name];
                     }

@@ -53,14 +53,14 @@ def handle_request_new_sequence(data):
         instrument = mongo.db.instruments.find_one({'_id' : instrument_id})
 
         if instrument is not None:
-            result = {
+            new_sequence = {
                 'composition_id' : composition_id,
                 'instrument_id' : str(instrument_id),
                 'voices' : instrument['voices'],
                 'name' : 'Untitled'
             }
 
-            sequence_id = mongo.db.sequences.insert_one(result).inserted_id
+            sequence_id = mongo.db.sequences.insert_one(new_sequence).inserted_id
             sequence = mongo.db.sequences.find_one(sequence_id)
             emit('response_new_sequence', json.loads(dumps(sequence)))
 

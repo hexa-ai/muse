@@ -30,15 +30,30 @@
                         var sequenceId = data['_id']['$oid'];
                         var sequenceName = data['name'];
 
+                        var voiceIds = [];
                         for (var voice in voices) {
                             var voiceName = voices[voice]['name'];
                             var voiceId = voiceName + '-' + sequenceId;
                             voices[voice]['voiceId'] = voiceId;
+                            voiceIds.push(voiceId);
                             sequencer.addVoice(voiceId, voiceName, sampleBank.samples[voiceName])
                         }
                          
-                        sequencerUIs.push(new SequencerUI(
-                            document.getElementById('sequencer'), sequencer, sequenceName, voices));
+                        var ui = new SequencerUI(document.getElementById('sequencer'), sequencer, sequenceName, voices)
+                        ui.saveButton.addEventListener('click', function(event) {
+                            var toggleData = "";
+                            var voices = sequencer.getVoices(voiceIds);
+                            for(var i in voices) {
+                                var toggles = voices[i]['toggles']
+                                if(toggles) {
+                                    for(var j in toggles) {
+                                        toggleData += toggles[j];
+                                    }
+                                }
+                            }
+                            console.log(toggleData);
+                        });
+                        sequencerUIs.push(ui);
                     }, 
                     function error() {
                         console.log('Error loading sample bank');                         
@@ -95,7 +110,11 @@
                             }
                         }
                     }  
+
                     console.log(toggleData); 
+                    socket.emit('save_composition', {
+
+                    });
                 });
 
                 function updateInfo() {

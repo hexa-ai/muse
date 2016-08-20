@@ -2,6 +2,7 @@ function SequencerUI(container, sequencer, sequenceName, voices) {
     var toggles = [];
     var div = document.createElement('div');
     container.appendChild(div);
+
     for(var voice in voices) {
         toggles.push([]);
         var voiceName = voices[voice]['name'];
@@ -29,7 +30,13 @@ function SequencerUI(container, sequencer, sequenceName, voices) {
         }
     } 
 
+    var saveBtn = document.createElement('input');
+    saveBtn.type = 'button';
+    saveBtn.value = 'Save';
+    container.appendChild(saveBtn);
+
     return {
+        saveButton : saveBtn,
         setStep : function(step) {
             for(var i = 0; i < toggles.length; i++) {
                 for(var j = 0; j < toggles[i].length; j++) {
