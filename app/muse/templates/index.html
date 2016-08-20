@@ -83,6 +83,21 @@
                     engine.setAmplitude(volumeSlider.value);
                 });
 
+                var saveBtn = document.getElementById('save-btn');
+                saveBtn.addEventListener('click', function(event) {
+                    var voices = sequencer.getVoices();
+                    var toggleData = "";
+                    for(var i in voices) {
+                        var toggles = voices[i]['toggles']
+                        if(toggles) {
+                            for(var j in toggles) {
+                                toggleData += toggles[j];
+                            }
+                        }
+                    }  
+                    console.log(toggleData); 
+                });
+
                 function updateInfo() {
                     requestAnimationFrame(updateInfo);
                     var t = engine.getCurrentTime();
@@ -120,6 +135,7 @@
                 {% endfor %}
             </select>
             <input id='create-instrument-btn' type='button' value='Create'></input>
+            <input id='save-btn' type='button' value='Save'></input>
         </div>
         <div id="sequencer"></div>
     </body>
