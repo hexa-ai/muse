@@ -64,6 +64,14 @@ def handle_request_new_sequence(data):
             sequence = mongo.db.sequences.find_one(sequence_id)
             emit('response_new_sequence', json.loads(dumps(sequence)))
 
+@socketio.on('sequence_name_update')
+def handle_sequence_name_update(data):
+    sequence_id = {'_id' : ObjectId(data['sequence_id'])}
+    name = data['name']
+    update = {'$set' : {'name' : name}}
+    print(sequence_id, update)
+    mongo.db.sequences.update_one(sequence_id, update)
+
 # ----------------------------------------------------------------   
 # Page Routing Handlers
 

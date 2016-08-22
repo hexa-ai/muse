@@ -23,13 +23,20 @@
             });
 
             socket.on('response_new_sequence', function(data) {
+                // Create a new sample bank
                 var sampleBank = new SampleBank(engine.ctx);
+                
+                // Load the set of samples
+                // Add a callback to handle the successful loading of all samples
                 sampleBank.loadAll(data['voices'], 
                     function success() {
                         var voices = data['voices'];
                         var sequenceId = data['_id']['$oid'];
                         var sequenceName = data['name'];
 
+                        // Add voices to the sequencer
+                        // Use a special voice-id property as a key for the voice
+                        // This id is a the name of the voice + the sequence id
                         var voiceIds = [];
                         for (var voice in voices) {
                             var voiceName = voices[voice]['name'];
@@ -38,8 +45,11 @@
                             voiceIds.push(voiceId);
                             sequencer.addVoice(voiceId, voiceName, sampleBank.samples[voiceName])
                         }
-                         
-                        var ui = new SequencerUI(document.getElementById('sequencer'), sequencer, sequenceName, voices)
+
+                        // Create the new sequencer UI 
+                        var ui = new SequencerUI(document.getElementById('sequencer'), sequencer, sequenceName, voices);
+
+                        // Add listeners for save
                         ui.saveButton.addEventListener('click', function(event) {
                             var toggleData = "";
                             var voices = sequencer.getVoices(voiceIds);
@@ -53,6 +63,17 @@
                             }
                             console.log(toggleData);
                         });
+
+                        // Add listeners for name change
+                        ui.nameInput.addEventListener('blur', function(event) {
+                            var name = event.target.value;
+                            if(name != '') {
+                                console.log("sending new name");
+                                socket.emit('sequence_name_update', {sequence_id : sequenceId, name : event.target.value})
+                            }
+                        });
+
+                        // Add to list of sequencer uis
                         sequencerUIs.push(ui);
                     }, 
                     function error() {
@@ -98,25 +119,6 @@
                     engine.setAmplitude(volumeSlider.value);
                 });
 
-                var saveBtn = document.getElementById('save-btn');
-                saveBtn.addEventListener('click', function(event) {
-                    var voices = sequencer.getVoices();
-                    var toggleData = "";
-                    for(var i in voices) {
-                        var toggles = voices[i]['toggles']
-                        if(toggles) {
-                            for(var j in toggles) {
-                                toggleData += toggles[j];
-                            }
-                        }
-                    }  
-
-                    console.log(toggleData); 
-                    socket.emit('save_composition', {
-
-                    });
-                });
-
                 function updateInfo() {
                     requestAnimationFrame(updateInfo);
                     var t = engine.getCurrentTime();
@@ -154,8 +156,9 @@
                 {% endfor %}
             </select>
             <input id='create-instrument-btn' type='button' value='Create'></input>
-            <input id='save-btn' type='button' value='Save'></input>
+            <input id='save-btn' type='button' value='Save All'></input>
         </div>
+        <br/>
         <div id="sequencer"></div>
     </body>
 </html>
