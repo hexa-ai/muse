@@ -61,14 +61,14 @@
                                     }
                                 }
                             }
-                            console.log(toggleData);
+
+                            socket.emit('sequence_data_update', {sequence_id : sequenceId, data : toggleData})
                         });
 
                         // Add listeners for name change
                         ui.nameInput.addEventListener('blur', function(event) {
                             var name = event.target.value;
                             if(name != '') {
-                                console.log("sending new name");
                                 socket.emit('sequence_name_update', {sequence_id : sequenceId, name : event.target.value})
                             }
                         });

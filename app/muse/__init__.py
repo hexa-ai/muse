@@ -69,7 +69,13 @@ def handle_sequence_name_update(data):
     sequence_id = {'_id' : ObjectId(data['sequence_id'])}
     name = data['name']
     update = {'$set' : {'name' : name}}
-    print(sequence_id, update)
+    mongo.db.sequences.update_one(sequence_id, update)
+
+@socketio.on('sequence_data_update')
+def handle_sequence_data_update(data):
+    sequence_id = {'_id' : ObjectId(data['sequence_id'])}
+    new_data = data['data']
+    update = {'$set' : {'data' : new_data}}
     mongo.db.sequences.update_one(sequence_id, update)
 
 # ----------------------------------------------------------------   
