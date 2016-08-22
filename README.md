@@ -1,5 +1,5 @@
 # Muse
-An A.I. aided music sequencer
+An A.I. aided music composition tool
 
 -----
 
