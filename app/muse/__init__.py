@@ -4,6 +4,9 @@ from flask import Flask, request
 from flask import render_template
 from flask_socketio import SocketIO, send, emit
 from flask_pymongo import PyMongo, ObjectId
+import numpy as np
+from math import floor
+from sklearn.cluster import KMeans
 
 # ----------------------------------------------------------------   
 # Setup and Config
@@ -39,6 +42,7 @@ def handle_save_composition(data):
             if 'sequences' in d:
                 for sequence in d['sequences']:
                     pass 
+
 @socketio.on('request_instrument_list')
 def handle_request_instrument_list():
     instruments = mongo.db.instruments.find({}, {'name' : 1})
@@ -63,6 +67,20 @@ def handle_request_new_sequence(data):
             sequence_id = mongo.db.sequences.insert_one(new_sequence).inserted_id
             sequence = mongo.db.sequences.find_one(sequence_id)
             emit('response_new_sequence', json.loads(dumps(sequence)))
+
+@socketio.on('update_models')
+def handle_update_models():
+    instrument_ids = mongo.db.instruments.find({}, {'_id' : 1})
+    for id in instrument_ids:
+        sequence_data = [] 
+        sequences = mongo.db.sequences.find({'instrument_id' : str(id['_id'])}, {'data' : 1})
+        for sequence in sequences:
+            if 'data' in sequence:
+                sequence_data.append(list(sequence['data']))
+        sequence_data = np.array(sequence_data)
+        if sequence_data.shape[0] > 5:
+            model = KMeans(n_clusters=5)
+            model.fit(sequence_data)
 
 @socketio.on('sequence_name_update')
 def handle_sequence_name_update(data):
@@ -90,7 +108,6 @@ def handle_request_ai_sequence(data):
     composition_id = data['composition_id']
     ai_sequences = mongo.db.sequences.find({'composition_id' : composition_id, 'ai' : True})
     user_sequences = mongo.db.sequences.find({'composition_id' : composition_id, 'ai' : False})
-    
 
 # ----------------------------------------------------------------   
 # Page Routing Handlers
