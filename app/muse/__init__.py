@@ -38,8 +38,7 @@ def handle_save_composition(data):
         if composition is not None:
             if 'sequences' in d:
                 for sequence in d['sequences']:
-                    pass
-                      
+                    pass 
 @socketio.on('request_instrument_list')
 def handle_request_instrument_list():
     instruments = mongo.db.instruments.find({}, {'name' : 1})
@@ -57,7 +56,8 @@ def handle_request_new_sequence(data):
                 'composition_id' : composition_id,
                 'instrument_id' : str(instrument_id),
                 'voices' : instrument['voices'],
-                'name' : 'Untitled'
+                'name' : 'Untitled',
+                'ai' : False
             }
 
             sequence_id = mongo.db.sequences.insert_one(new_sequence).inserted_id
@@ -77,6 +77,20 @@ def handle_sequence_data_update(data):
     new_data = data['data']
     update = {'$set' : {'data' : new_data}}
     mongo.db.sequences.update_one(sequence_id, update)
+
+@socketio.on('sequence_ai_update')
+def handle_sequence_ai_update(data):
+    sequence_id = {'_id' : ObjectId(data['sequence_id'])}
+    ai = data['ai']
+    update = {'$set' : {'ai' : ai}}
+    mongo.db.sequences.update_one(sequence_id, update)
+
+@socketio.on('request_ai_sequence')
+def handle_request_ai_sequence(data):
+    composition_id = data['composition_id']
+    ai_sequences = mongo.db.sequences.find({'composition_id' : composition_id, 'ai' : True})
+    user_sequences = mongo.db.sequences.find({'composition_id' : composition_id, 'ai' : False})
+    
 
 # ----------------------------------------------------------------   
 # Page Routing Handlers

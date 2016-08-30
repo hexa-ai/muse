@@ -1,5 +1,6 @@
 <html>
     <head>
+        <link rel='stylesheet' href='./static/css/normalize.css'>
         <script src='https://cdn.socket.io/socket.io-1.4.5.js'></script>
         <script type='text/javascript' src='./static/js/audioengine.js'></script>
         <script type='text/javascript' src='./static/js/sequencer-ui.js'></script>
@@ -9,6 +10,7 @@
             var engine = AudioEngine();
             var sequencer = StepSequencer();
             var sequencerUIs = [];
+            var compositionId = 0;
             engine.connect(sequencer);
             
             // ---------------------------------------------------------------- 
@@ -19,10 +21,20 @@
             });
 
             socket.on('composition_init', function(data) {
-                compositionId = data['composition_id']; 
+                compositionId = compositionId || data['composition_id']; 
             });
 
+            setInterval(function() {
+                for(var i = 0; i < sequencerUIs.length; i++) {
+                    if(sequencerUIs[i].aiToggle.checked) {
+                        console.log(compositionId);
+                        socket.emit('request_ai_sequence', {composition_id: compositionId});
+                    }
+                } 
+            }, 1000);
+
             socket.on('response_new_sequence', function(data) {
+                    console.log(data);
                 // Create a new sample bank
                 var sampleBank = new SampleBank(engine.ctx);
                 
@@ -63,6 +75,10 @@
                             }
 
                             socket.emit('sequence_data_update', {sequence_id : sequenceId, data : toggleData})
+                        });
+
+                        ui.aiToggle.addEventListener('click', function(event) {
+                            socket.emit('sequence_ai_update', {sequence_id : sequenceId, ai : ui.aiToggle.checked});
                         });
 
                         // Add listeners for name change
@@ -156,7 +172,6 @@
                 {% endfor %}
             </select>
             <input id='create-instrument-btn' type='button' value='Create'></input>
-            <input id='save-btn' type='button' value='Save All'></input>
         </div>
         <br/>
         <div id="sequencer"></div>

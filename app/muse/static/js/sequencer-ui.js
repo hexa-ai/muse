@@ -40,7 +40,16 @@ function SequencerUI(container, sequencer, sequenceName, voices) {
     saveBtn.value = 'Save';
     container.appendChild(saveBtn);
 
+    var aiLabel = document.createElement('div');
+    aiLabel.innerHTML = 'Enable AI';
+
+    var aiToggle = document.createElement('input');
+    aiToggle.type = 'checkbox';
+    aiLabel.appendChild(aiToggle);
+    container.appendChild(aiLabel);
+
     return {
+        aiToggle : aiToggle,
         saveButton : saveBtn,
         nameInput : nameInput,
         setStep : function(step) {
