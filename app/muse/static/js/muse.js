@@ -27,7 +27,6 @@ setInterval(function() {
 }, 1000);
 
 socket.on('response_new_sequence', function(data) {
-        console.log(data);
     // Create a new sample bank
     var sampleBank = new SampleBank(engine.ctx);
     
@@ -87,7 +86,8 @@ socket.on('response_new_sequence', function(data) {
         }, 
         function error() {
             console.log('Error loading sample bank');                         
-        }); 
+        }
+    ); 
 });
 
 // ---------------------------------------------------------------- 
@@ -96,7 +96,6 @@ window.onload = function() {
     var instrumentSelect = document.getElementById('instrument-select');
     var createInstrumentButton = document.getElementById('create-instrument-btn');
 
-
     createInstrumentButton.addEventListener('click', function(event) {
         socket.emit('request_new_sequence', {
             'composition_id' : compositionId, 
@@ -104,22 +103,22 @@ window.onload = function() {
         });
     });
 
-    var btn = document.getElementById("play-stop-btn");
-    btn.addEventListener("click", function(event) {
+    var playButton = document.getElementById("play-stop-btn");
+    playButton.addEventListener("click", function(event) {
         switch(engine.getState()) {
             case 'started':
                 engine.stop();
-                btn.value = 'Play';
+                playButton.value = 'Play';
             break;
             case 'stopped':
                 engine.start();
-                btn.value = 'Stop';
+                playButton.value = 'Stop';
             break;
         }
     });
 
-    var btn = document.getElementById('update-models-btn');
-    btn.addEventListener('click', function(event) {
+    var updateButton = document.getElementById('update-models-btn');
+    updateButton.addEventListener('click', function(event) {
         socket.emit('update_models');
     });
 
