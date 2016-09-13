@@ -5,6 +5,7 @@ from flask import render_template
 from flask_socketio import SocketIO, send, emit
 from flask_pymongo import PyMongo, ObjectId
 import numpy as np
+from scipy.sparse import csr_matrix, vstack
 from math import floor
 from sklearn.cluster import KMeans
 
@@ -61,6 +62,7 @@ def handle_request_new_sequence(data):
 def handle_update_models():
     # get all compositions
     # create sparse matrix representations of all compositions
+    pass
 
 
 @socketio.on('sequence_name_update')
@@ -106,6 +108,7 @@ def index2():
 # Utilities 
 def create_sparse_composition_matrix(data):
     # splits a string of ones and zeroes into a sparse matrix
+    pass
 
 if __name__ == '__main__':
     socketio.run(app, debug=app.config['DEBUG'])
