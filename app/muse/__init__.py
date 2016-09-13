@@ -17,7 +17,7 @@ socketio = SocketIO(app, async_mode="eventlet")
 mongo = PyMongo(app)
 
 # ----------------------------------------------------------------   
-# WebSocket Handlers
+# SocketIO Handlers
 
 @socketio.on('connect')
 def handle_connect():
@@ -59,25 +59,9 @@ def handle_request_new_sequence(data):
 
 @socketio.on('update_models')
 def handle_update_models():
-    instrument_ids = mongo.db.instruments.find({}, {'_id' : 1})
-    for id in instrument_ids:
-        sequence_ids = []
-        sequence_data = [] 
-        sequences = mongo.db.sequences.find({
-            'instrument_id' : str(id['_id']), 
-            'data' : {'$exists' : True}}, {'data' : 1})
-        for sequence in sequences:
-            sequence_data.append(list(sequence['data']))
-            sequence_ids.append(sequence['_id'])
-        sequence_data = np.array(sequence_data)
-        if sequence_data.shape[0] > 5:
-            model = KMeans(n_clusters=5)
-            model.fit(sequence_data)
-            for i in range(len(model.labels_)):
-                label = model.labels_[i]
-                sequence_id = {'_id' : ObjectId(sequence_ids[i]) }
-                update = {'$set' : {'cluster_label' : int(label)}}
-                mongo.db.sequences.update_one(sequence_id, update)
+    # get all compositions
+    # create sparse matrix representations of all compositions
+
 
 @socketio.on('sequence_name_update')
 def handle_sequence_name_update(data):
@@ -117,6 +101,11 @@ def index():
 @app.route('/index2')
 def index2():
     return render_template('index_2.html')
+
+# ---------------------------------------------------------------- 
+# Utilities 
+def create_sparse_composition_matrix(data):
+    # splits a string of ones and zeroes into a sparse matrix
 
 if __name__ == '__main__':
     socketio.run(app, debug=app.config['DEBUG'])
