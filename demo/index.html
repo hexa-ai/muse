@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <script type='text/javascript' src='./src/audioengine.js'></script>
+    <script type='text/javascript' src='./src/sequencer-ui.js'></script>
+    <script type='text/javascript' src='./src/muse.js'></script>
+  </head>
+  <body>
+    <h1>Muse</h1><h2>by HEXA</h2><p>Please contact your local bot</p>
+    <input type="button" id="play-stop-btn" value="Play"></input>
+    <p>Tempo: <input type="range" id="tempo-slider" value="120" step="1" min="45" max="270"></p>
+    <p>Volume: <input type="range" id="volume-slider" step="0.01" value="0.5" min="0.0" max="0.8"></p>
+    <div id="info">Info here</div>
+    <input type='button' id='update-models-btn' value='Update Models'></input>
+    <h3>Create New Instrument</h3>
+    <div>
+      <select id='instrument-select'>
+        <!--
+          {% for instrument in instruments %}
+          <option text="{{ instrument['name'] }}" value="{{ instrument['_id'] }}">{{ instrument['name'] }}</option>
+          {% endfor %}
+        -->
+      </select>
+      <input id='create-instrument-btn' type='button' value='Create'></input>
+    </div>
+    <br/>
+    <div id="sequencer"></div>
+  </body>
+</html>
